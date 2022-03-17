@@ -1,0 +1,3 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+QUBOConstraints = "110b7fcc-6942-4061-a625-86e03d1de7cf"
