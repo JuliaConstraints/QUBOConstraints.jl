@@ -17,8 +17,9 @@ export train!
 # SECTION - includes
 include("base.jl")
 
-include("one_hot.jl")
-include("conversion.jl")
+include("encoding/domain_wall.jl")
+include("encoding/one_hot.jl")
+include("encoding/conversion.jl")
 
 include("learn.jl")
 
