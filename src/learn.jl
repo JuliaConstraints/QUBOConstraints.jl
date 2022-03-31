@@ -51,7 +51,7 @@ function oversampling(X, sat, opt)
     return Z
 end
 
-function train!(Q, X, sat, opt; η = .001, precision = 5)
+function train!(Q, X, sat, opt; η = .001, precision = 5, X_check = X)
     θ = params(Q)
     # for x in oversampling(X, sat, opt)
     for x in X
@@ -61,6 +61,6 @@ function train!(Q, X, sat, opt; η = .001, precision = 5)
 
     Q[:,:] = round.(precision*Q)
 
-    df = make_df(X, Q, sat, opt)
-    return pretty_table(describe(df))
+    df = make_df(X_check, Q, sat, opt)
+    return pretty_table(describe(df[!, [:sat, :opt, :predict, :shifted, :accurate]]))
 end
