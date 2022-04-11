@@ -1,8 +1,8 @@
 @testset "Linear Regression" begin
 
-    set_sizes = [100, 1000, 10000, 100000]
+    set_sizes = [100, 1000, 10000]
 
-    domain_sizes = [3, 5, 10]
+    domain_sizes = [3, 5]
 
     set_types = [
         # Binary representation (either domain wall or one-hot)

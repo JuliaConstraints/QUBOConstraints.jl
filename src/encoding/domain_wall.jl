@@ -15,16 +15,10 @@ function integerize(x, d::D, ::Val{:domain_wall}) where {T <: Number, D <: Discr
     itr = Iterators.flatten(b0 ? (1, x) : (x))
     at_one = true
     val = typemax(T)
-    @info "Debug: start" b0 itr at_one val d collect(itr)
     for (b, v) in Iterators.zip(itr, get_domain(d))
-        @info "Debug: for" at_one val b v
         if at_one
-            b == 1 && (val = v)
-            b == 0 && (at_one = false)
-            @info "Debug: if" at_one val b v
+            b == 1 ? (val = v) : (at_one = false)
         else
-
-            @info "Debug: else" at_one val b v
             b == 1 && return typemax(T)
         end
     end
