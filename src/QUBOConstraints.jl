@@ -8,6 +8,7 @@ using LinearAlgebra
 using PrettyTables
 
 import Flux.Optimise: update!
+import Flux: params
 import DataFrames: describe
 
 # SECTION - exports
