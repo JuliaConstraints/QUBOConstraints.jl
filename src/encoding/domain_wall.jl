@@ -12,14 +12,19 @@ end
 
 function integerize(x, d::D, ::Val{:domain_wall}) where {T <: Number, D <: DiscreteDomain{T}}
     b0 = typeof(d) <: RangeDomain && first(get_domain(d)) == 0
-    itr = Iterators.flatten(b0 ? (x, 0) : (x))
+    itr = Iterators.flatten(b0 ? (1, x) : (x))
     at_one = true
     val = typemax(T)
+    @info "Debug: start" b0 itr at_one val d collect(itr)
     for (b, v) in Iterators.zip(itr, get_domain(d))
+        @info "Debug: for" at_one val b v
         if at_one
-            val = v
+            b == 1 && (val = v)
             b == 0 && (at_one = false)
+            @info "Debug: if" at_one val b v
         else
+
+            @info "Debug: else" at_one val b v
             b == 1 && return typemax(T)
         end
     end
