@@ -1,17 +1,37 @@
-function binarize(n, domain_size, ::Val{:one_hot})
-	y = zeros(Int, domain_size)
-    y[n+1] = 1
+function binarize(x, d::D, ::Val{:one_hot}) where {T <: Number, D <: DiscreteDomain{T}}
+    y = zeros(T, length(d))
+    is_in = false
+    for (i, v) in enumerate(get_domain(d))
+        if x == v
+            y[i] = 1
+            is_in = true
+            break
+        end
+    end
+    @assert is_in "The value $x is not in the domain $d"
     return y
 end
 
-function binarize(x::Vector{Int}, dim, ::Val{:one_hot})
-    return Iterators.flatten(map(i -> binarize(i, dim), x))
+function integerize(x, d::D, ::Val{:one_hot}) where {T <: Number, D <: DiscreteDomain{T}}
+    valid = false
+    val = typemax(T)
+    for (b, v) in Iterators.zip(x, get_domain(d))
+        if b == 1
+            valid && break
+            valid = true
+            val = v
+        end
+    end
+    return val
 end
 
-function integerize(x, dom_size, ::Val{:one_hot})
-    function aux(b)
-		a = findall(x -> x == 1, b)
-		return length(a) != 1 ? dom_size : first(a) - 1
-	end
-    return map(i -> aux(@view(x[((i-1)*dom_size+1):(i*dom_size)])), 1:dom_size)
+function integerize(x, domains, ::Val{:one_hot})
+    start = 0
+    stop = 0
+    function aux(d)
+        start = stop + 1
+        stop += length(d)
+        return integerize(@view(x[start:stop]), d, Val(:one_hot))
+    end
+    return map(aux, domains)
 end

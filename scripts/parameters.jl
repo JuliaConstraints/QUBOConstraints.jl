@@ -33,8 +33,18 @@ const DEFAULT_ROUNDIND_PRECISIONS = [
     1,
 ]
 
+# includes
+include("all_different.jl")
+include("ordered.jl")
+
+const DEFAULT_CONSTRAINTS = [
+    :all_different => ALL_DIFFERENT,
+    :ordered => ORDERED,
+]
+
 const ALL_PARAMETERS = Dict(
     # Search space parameters
+    :constraint => DEFAULT_CONSTRAINTS,
     :domain_size => DEFAULT_DOMAIN_SIZES,
     :encoding => DEFAULT_ENCODINGS,
     :training_size_set => DEFAULT_TRAINING_SET_SIZES,
