@@ -56,7 +56,7 @@ function train!(Q, X, sat, opt; η = .001, precision = 5, X_check = X)
     # for x in oversampling(X, sat, opt)
     for x in X
         grads = gradient(() -> loss(x, opt(x) + sat(x), Q), θ)
-        update!(Q, η * grads[Q])
+        Q .-= η * grads[Q]
     end
 
     Q[:,:] = round.(precision*Q)
