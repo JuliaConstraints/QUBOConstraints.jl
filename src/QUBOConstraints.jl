@@ -13,12 +13,13 @@ import DataFrames: describe
 
 # SECTION - exports
 export binarize
-export integerize
-export train!
+export debinarize
+export train
 
 export QUBO_linear_sum
 
 # SECTION - includes
+include("common.jl")
 include("base.jl")
 
 include("handmade/linear_sum.jl")
