@@ -1,3 +1,5 @@
+isvalid(x, ::Val{:one_hot}) = sum(x) == 1
+
 function binarize(x, d::D, ::Val{:one_hot}) where {T <: Number, D <: DiscreteDomain{T}}
     y = zeros(T, length(d))
     is_in = false
@@ -12,7 +14,7 @@ function binarize(x, d::D, ::Val{:one_hot}) where {T <: Number, D <: DiscreteDom
     return y
 end
 
-function integerize(x, d::D, ::Val{:one_hot}) where {T <: Number, D <: DiscreteDomain{T}}
+function debinarize(x, d::D, ::Val{:one_hot}) where {T <: Number, D <: DiscreteDomain{T}}
     valid = false
     val = typemax(T)
     for (b, v) in Iterators.zip(x, get_domain(d))
@@ -25,13 +27,13 @@ function integerize(x, d::D, ::Val{:one_hot}) where {T <: Number, D <: DiscreteD
     return val
 end
 
-function integerize(x, domains, ::Val{:one_hot})
+function debinarize(x, domains, ::Val{:one_hot})
     start = 0
     stop = 0
     function aux(d)
         start = stop + 1
         stop += length(d)
-        return integerize(@view(x[start:stop]), d, Val(:one_hot))
+        return debinarize(@view(x[start:stop]), d, Val(:one_hot))
     end
     return map(aux, domains)
 end

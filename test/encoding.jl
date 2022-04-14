@@ -3,10 +3,10 @@
     b = [1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,1]
 
     @test collect(binarize(x)) == b
-    @test integerize(b) == x
+    @test debinarize(b) == x
 
     d = domain(x)
-    @test integerize(collect(binarize(x, d)), d) == x
+    @test debinarize(collect(binarize(x, d)), d) == x
 end
 
 @testset "Encoding: Domain Wall" begin
@@ -17,8 +17,8 @@ end
 
     a = [0,0,0,0,0, 1,0,0,0,0, 1,1,0,0,0, 1,1,1,0,0, 1,1,1,1,0, 1,1,1,1,1]
 
-    @test collect(binarize(x; encoding = :domain_wall)) == a
-    @test integerize(a; encoding = :domain_wall) == x
+    @test collect(binarize(x; binarization = :domain_wall)) == a
+    @test debinarize(a; binarization = :domain_wall) == x
 
-    @test integerize(collect(binarize(y, d; encoding = :domain_wall)), d; encoding = :domain_wall) == y
+    @test debinarize(collect(binarize(y, d; binarization = :domain_wall)), d; binarization = :domain_wall) == y
 end
