@@ -1,4 +1,4 @@
-function isvalid(x, ::Val{:domain_wall})
+function is_valid(x, ::Val{:domain_wall})
     for (i, b) in enumerate(x)
         iszero(b) && (return iszero(x[i+1:end]))
     end
@@ -18,11 +18,11 @@ function binarize(x, d::D, ::Val{:domain_wall}) where {T <: Number, D <: Discret
 end
 
 function debinarize(x, d::D, ::Val{:domain_wall}) where {T <: Number, D <: DiscreteDomain{T}}
-    b0 = typeof(d) <: RangeDomain && first(get_domain(d)) == 0
-    itr = Iterators.flatten(b0 ? (1, x) : (x))
+    b0::Bool = typeof(d) <: RangeDomain && first(get_domain(d)) == 0
     at_one = true
     val = typemax(T)
-    for (b, v) in Iterators.zip(itr, get_domain(d))
+    for (i, v) in zip((b0 ? 0 : 1):length(x), get_domain(d))
+        b = i > 0 ? x[i] : 1
         if at_one
             b == 1 ? (val = v) : (at_one = false)
         else
@@ -32,14 +32,16 @@ function debinarize(x, d::D, ::Val{:domain_wall}) where {T <: Number, D <: Discr
     return val
 end
 
-function debinarize(x, domains, ::Val{:domain_wall})
+function debinarize(x, domains::Vector{D}, ::Val{:domain_wall}
+) where {T <: Number, D <: DiscreteDomain{T}}
     start = 0
     stop = 0
     function aux(d)
         b0 = typeof(d) <: RangeDomain && first(get_domain(d)) == 0
         start = stop + 1
         stop += length(d) - b0
-        return debinarize(@view(x[start:stop]), d, Val(:domain_wall))
+
+        return debinarize(x[start:stop], d, Val(:domain_wall))
     end
     return map(aux, domains)
 end

@@ -1,4 +1,4 @@
-isvalid(x, ::Val{:one_hot}) = sum(x) == 1
+is_valid(x, ::Val{:one_hot}) = sum(x) == 1
 
 function binarize(x, d::D, ::Val{:one_hot}) where {T <: Number, D <: DiscreteDomain{T}}
     y = zeros(T, length(d))

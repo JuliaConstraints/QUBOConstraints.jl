@@ -14,6 +14,7 @@ import DataFrames: describe
 # SECTION - exports
 export binarize
 export debinarize
+export is_valid
 export train
 
 export QUBO_linear_sum

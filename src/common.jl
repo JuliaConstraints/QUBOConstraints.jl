@@ -12,10 +12,8 @@ end
 to_domains(domain_sizes::Vector{Int}) = map(ds -> domain(0:ds), domain_sizes)
 
 function to_domains(X, ds::Int = δ(X))
-    @warn "debug" first(X) ds δ(X)
-    n::Int = length(first(X)) / ds
     d = domain(0:ds-1)
-    return fill(d, n)
+    return fill(d, length(first(X)))
 end
 
 function to_domains(X, d::D) where {D <: DiscreteDomain}

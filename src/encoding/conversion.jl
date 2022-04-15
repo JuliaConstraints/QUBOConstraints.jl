@@ -1,21 +1,23 @@
-isvalid(x, encoding::Symbol = :none) = isvalid(x, Val(encoding))
+is_valid(x, encoding::Symbol = :none) = is_valid(x, Val(encoding))
 
-isvalid(x, ::Val) = true
+is_valid(x, ::Val) = true
 
 function binarize(x::Vector{T}, d = length(x); binarization = :one_hot) where {T <: Number}
-    return Iterators.flatten(map(i -> binarize(i, d; binarization), x))
+    return collect(Iterators.flatten(map(i -> binarize(i, d; binarization), x)))
 end
 
 function binarize(x::T, domain_size::Int; binarization = :one_hot) where {T <: Number}
     return binarize(x, domain(0:(domain_size - 1)), Val(binarization))
 end
 
-function binarize(x::T, d::D; binarization=:one_hot) where {T <: Number, D <: DiscreteDomain{T}}
+function binarize(x::T, d::D; binarization=:one_hot
+) where {T <: Number, D <: DiscreteDomain{T}}
     return binarize(x, d, Val(binarization))
 end
 
-function binarize(x::Vector{T}, d::Vector{D}; binarization=:one_hot) where {T <: Number, D <: DiscreteDomain{T}}
-    return Iterators.flatten(map((y,dom) -> binarize(y, dom; binarization), Iterators.zip(x,d)))
+function binarize(x::Vector{T}, d::Vector{D}; binarization=:one_hot
+) where {T <: Number, D <: DiscreteDomain{T}}
+    return collect(Iterators.flatten(map(elt -> binarize(elt[1], elt[2]; binarization), zip(x,d))))
 end
 
 function debinarize(x; binarization = :one_hot)
@@ -27,7 +29,7 @@ function debinarize(x; binarization = :one_hot)
     return debinarize(x, ds; binarization)
 end
 
-function debinarize(x, domain_size; binarization = :one_hot)
+function debinarize(x, domain_size::Int; binarization = :one_hot)
     return debinarize(x, domain(0:(domain_size - 1)); binarization)
 end
 
@@ -45,6 +47,7 @@ function debinarize(x, d::D; binarization = :one_hot) where {D <: DiscreteDomain
     return debinarize(x, domains; binarization)
 end
 
-function debinarize(x, domains::Vector{D}; binarization = :one_hot) where {D <: DiscreteDomain}
+function debinarize(x, domains::Vector{D}; binarization = :one_hot
+) where {D <: DiscreteDomain}
     return debinarize(x, domains, Val(binarization))
 end
