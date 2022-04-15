@@ -2,7 +2,7 @@ predict(x, Q) = transpose(x) * Q * x
 
 loss(x, y, Q) = (predict(x, Q) .-y).^2
 
-function make_df(X, Q, penalty)
+function make_df(X, Q, penalty, binarization, domains)
 	df = DataFrame()
 	for (i,x) in enumerate(X)
 		if i == 1
@@ -14,8 +14,19 @@ function make_df(X, Q, penalty)
 
 	dim = length(df[1,:])
 
-	df[!,:penalty] = map(r -> penalty(Vector(r)), eachrow(df))
-	df[!,:predict] = map(r -> predict(Vector(r), Q), eachrow(df[:, 1:dim]))
+    if binarization == :none
+        df[!,:penalty] = map(r -> penalty(Vector(r)), eachrow(df))
+        df[!,:predict] = map(r -> predict(Vector(r), Q), eachrow(df[:, 1:dim]))
+    else
+        df[!,:penalty] = map(
+            r -> penalty(binarize(Vector(r), domains; binarization)),
+            eachrow(df)
+        )
+        df[!,:predict] = map(
+            r -> predict(binarize(Vector(r), domains; binarization), Q),
+            eachrow(df[:, 1:dim])
+        )
+    end
 
 	min_false = minimum(
         filter(:penalty => >(minimum(df[:,:penalty])), df)[:,:predict];
@@ -50,9 +61,14 @@ function oversample(X, f)
 end
 
 function preliminaries(X, domains, binarization)
-    Y = binarization==:none ? X : map(x -> collect(binarize(X, domains; binarization)), X)
-    n = length(first(Y))
-    return Y, zeros(n,n)
+    if binarization==:none
+        n = length(first(X))
+        return X, zeros(n,n)
+    else
+        Y = map(x -> collect(binarize(x, domains; binarization)), X)
+        n = length(first(Y))
+        return Y, zeros(n,n)
+    end
 end
 
 function preliminaries(X, _)
@@ -60,7 +76,7 @@ function preliminaries(X, _)
     return X, zeros(n,n)
 end
 
-function train!(Q, X, penalty, η, precision, X_check, oversampling)
+function train!(Q, X, penalty, η, precision, X_test, oversampling, binarization, domains)
     θ = params(Q)
     for x in (oversampling ? oversample(X, penalty) : X)
         grads = gradient(() -> loss(x, penalty(x), Q), θ)
@@ -69,7 +85,7 @@ function train!(Q, X, penalty, η, precision, X_check, oversampling)
 
     Q[:,:] = round.(precision*Q)
 
-    df = make_df(X_check, Q, penalty)
+    df = make_df(X_test, Q, penalty, binarization, domains)
     return pretty_table(describe(df[!, [:penalty, :predict, :shifted, :accurate]]))
 end
 
@@ -79,50 +95,50 @@ function train(
     penalty;
     η = .001,
     precision = 5,
-    X_check = X,
+    X_test = X,
     binarization = :none,
     oversampling = false,
 ) where {D <: DiscreteDomain}
     Y, Q = preliminaries(X, domains, binarization)
-    return train!(Q, Y, penalty, η, precision, X_check, oversampling)
+    return train!(Q, Y, penalty, η, precision, X_test, oversampling, binarization, domains)
 end
 
 function train(
     X, penalty;
-    η = .001, precision = 5, X_check = X, binarization = :one_hot, oversampling = false,
+    η = .001, precision = 5, X_test = X, binarization = :one_hot, oversampling = false,
 )
     return train(
         X, to_domains(X), penalty;
-        η, precision, X_check, binarization, oversampling,
+        η, precision, X_test, binarization, oversampling,
     )
 end
 
 function train(
     X, domain_size::Int, penalty;
-    η = .001, precision = 5, X_check = X, binarization = :one_hot, oversampling = false,
+    η = .001, precision = 5, X_test = X, binarization = :one_hot, oversampling = false,
 )
     return train(
         X, to_domains(X, domain_size), penalty;
-        η, precision, X_check, binarization, oversampling
+        η, precision, X_test, binarization, oversampling
     )
 end
 
 function train(
     X, domain_sizes::Vector{Int}, penalty;
-    η = .001, precision = 5, X_check = X, binarization = :one_hot, oversampling = false,
+    η = .001, precision = 5, X_test = X, binarization = :one_hot, oversampling = false,
 )
     return train(
         X, to_domains(X, domain_sizes), penalty;
-        η, precision, X_check, binarization, oversampling
+        η, precision, X_test, binarization, oversampling
     )
 end
 
 function train(
     X, d::D, penalty;
-    η = .001, precision = 5, X_check = X, binarization = :one_hot, oversampling = false,
+    η = .001, precision = 5, X_test = X, binarization = :one_hot, oversampling = false,
 ) where {D <: DiscreteDomain}
     return train(
         X, to_domains(X, d), penalty;
-        η, precision, X_check, binarization, oversampling
+        η, precision, X_test, binarization, oversampling
     )
 end
