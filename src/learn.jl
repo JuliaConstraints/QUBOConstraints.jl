@@ -38,28 +38,6 @@ function make_df(X, Q, penalty, binarization, domains)
 	return df
 end
 
-function oversample(X, f)
-    X_true = Vector{eltype(X)}()
-    X_false = Vector{eltype(X)}()
-
-    μ = minimum(f, X)
-
-    foreach(x -> push!(f(x) == μ ? X_true : X_false, x), X)
-
-    b = length(X_true) > length(X_false)
-    Y = reverse(b ? X_true : X_false)
-    it = Iterators.cycle(b ? X_false : X_true)
-
-    Z = Vector{eltype(X)}()
-    l = length(Y)
-    for (i, x) in enumerate(it)
-        push!(Z, x, Y[i])
-        i == l && break
-    end
-
-    return Z
-end
-
 function preliminaries(X, domains, binarization)
     if binarization==:none
         n = length(first(X))
@@ -91,54 +69,53 @@ end
 
 function train(
     X,
-    domains::Vector{D},
-    penalty;
-    η = .001,
-    precision = 5,
+    penalty,
+    domains::Vector{D};
+    optimizer = GradientDescentOptimizer(),
     X_test = X,
-    binarization = :none,
-    oversampling = false,
 ) where {D <: DiscreteDomain}
-    Y, Q = preliminaries(X, domains, binarization)
-    return train!(Q, Y, penalty, η, precision, X_test, oversampling, binarization, domains)
-end
-
-function train(
-    X, penalty;
-    η = .001, precision = 5, X_test = X, binarization = :one_hot, oversampling = false,
-)
-    return train(
-        X, to_domains(X), penalty;
-        η, precision, X_test, binarization, oversampling,
+    Y, Q = preliminaries(X, domains, optimizer.binarization)
+    return train!(
+        Q, Y, penalty, optimizer.η, optimizer.precision, X_test,
+        optimizer.oversampling, optimizer.binarization, domains
     )
 end
 
 function train(
-    X, domain_size::Int, penalty;
-    η = .001, precision = 5, X_test = X, binarization = :one_hot, oversampling = false,
+    X,
+    penalty;
+    optimizer = GradientDescentOptimizer(),
+    X_test = X,
 )
-    return train(
-        X, to_domains(X, domain_size), penalty;
-        η, precision, X_test, binarization, oversampling
-    )
+    return train(X, penalty, to_domains(X); optimizer, X_test)
 end
 
 function train(
-    X, domain_sizes::Vector{Int}, penalty;
-    η = .001, precision = 5, X_test = X, binarization = :one_hot, oversampling = false,
+    X,
+    penalty,
+    domain_size::Int;
+    optimizer = GradientDescentOptimizer(),
+    X_test = X,
 )
-    return train(
-        X, to_domains(X, domain_sizes), penalty;
-        η, precision, X_test, binarization, oversampling
-    )
+    return train(X, penalty, to_domains(X, domain_size); optimizer, X_test)
 end
 
 function train(
-    X, d::D, penalty;
-    η = .001, precision = 5, X_test = X, binarization = :one_hot, oversampling = false,
+    X,
+    penalty,
+    domain_sizes::Vector{Int};
+    optimizer = GradientDescentOptimizer(),
+    X_test = X,
+)
+    return train(X, penalty, to_domains(X, domain_sizes); optimizer, X_test)
+end
+
+function train(
+    X,
+    penalty,
+    d::D;
+    optimizer = GradientDescentOptimizer(),
+    X_test = X,
 ) where {D <: DiscreteDomain}
-    return train(
-        X, to_domains(X, d), penalty;
-        η, precision, X_test, binarization, oversampling
-    )
+    return train(X, penalty, to_domains(X, d); optimizer, X_test)
 end
