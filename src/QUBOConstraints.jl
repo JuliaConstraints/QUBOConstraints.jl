@@ -17,10 +17,10 @@ export debinarize
 export is_valid
 export train
 
+export GradientDescentOptimizer
 export QUBO_linear_sum
 
 # SECTION - includes
-include("common.jl")
 include("base.jl")
 
 include("handmade/linear_sum.jl")
@@ -29,6 +29,7 @@ include("encoding/domain_wall.jl")
 include("encoding/one_hot.jl")
 include("encoding/conversion.jl")
 
+include("optimizer.jl")
 include("learn.jl")
 
 end

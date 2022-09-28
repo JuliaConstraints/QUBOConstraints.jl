@@ -67,10 +67,10 @@
         @testset "$(config[:info])" begin
             println("\nTest for $(config[:info])")
             penalty = x -> all_different(x, config[:encoding], config[:binarization])
-            train(
-                config[:train], penalty;
-                binarization = config[:binarization], X_test = config[:test]
+            optimizer = GradientDescentOptimizer(;
+                binarization = config[:binarization]
             )
+            train(config[:train], penalty; optimizer, X_test = config[:test])
         end
     end
 
