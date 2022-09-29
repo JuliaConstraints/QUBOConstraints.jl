@@ -88,6 +88,5 @@ function train(
     optimizer = GradientDescentOptimizer(),
     X_test = X,
 )
-    doms = isnothing(dom_stuff) ? to_domains(X) : to_domains(X, dom_stuff)
-    return train(X, penalty, doms; optimizer, X_test)
+    return train(X, penalty, to_domains(X, dom_stuff); optimizer, X_test)
 end
