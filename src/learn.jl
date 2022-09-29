@@ -83,39 +83,11 @@ end
 
 function train(
     X,
-    penalty;
+    penalty,
+    dom_stuff = nothing;
     optimizer = GradientDescentOptimizer(),
     X_test = X,
 )
-    return train(X, penalty, to_domains(X); optimizer, X_test)
-end
-
-function train(
-    X,
-    penalty,
-    domain_size::Int;
-    optimizer = GradientDescentOptimizer(),
-    X_test = X,
-)
-    return train(X, penalty, to_domains(X, domain_size); optimizer, X_test)
-end
-
-function train(
-    X,
-    penalty,
-    domain_sizes::Vector{Int};
-    optimizer = GradientDescentOptimizer(),
-    X_test = X,
-)
-    return train(X, penalty, to_domains(X, domain_sizes); optimizer, X_test)
-end
-
-function train(
-    X,
-    penalty,
-    d::D;
-    optimizer = GradientDescentOptimizer(),
-    X_test = X,
-) where {D <: DiscreteDomain}
-    return train(X, penalty, to_domains(X, d); optimizer, X_test)
+    doms = isnothing(dom_stuff) ? to_domains(X) : to_domains(X, dom_stuff)
+    return train(X, penalty, doms; optimizer, X_test)
 end
