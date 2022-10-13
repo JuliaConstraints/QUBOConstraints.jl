@@ -56,6 +56,15 @@ end
 
 function train!(Q, X, penalty, η, precision, X_test, oversampling, binarization, domains)
     θ = params(Q)
+    try
+        penalty(first(X))
+    catch e
+        if isa(e, UndefKeywordError)
+            penalty = (x; dom_size = δ_extrema(Iterators.flatten(X)))-> penalty(x; dom_size)
+        else
+            throw(e)
+        end
+    end
     for x in (oversampling ? oversample(X, penalty) : X)
         grads = gradient(() -> loss(x, penalty(x), Q), θ)
         Q .-= η * grads[Q]
