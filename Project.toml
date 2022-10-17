@@ -1,7 +1,7 @@
 name = "QUBOConstraints"
 uuid = "110b7fcc-6942-4061-a625-86e03d1de7cf"
 authors = ["azzaare <jf@baffier.fr> and contributors"]
-version = "0.1.2"
+version = "0.2.0"
 
 [deps]
 ConstraintDomains = "5800fd60-8556-4464-8d61-84ebf7a0bedb"
