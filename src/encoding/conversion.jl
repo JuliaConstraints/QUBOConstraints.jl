@@ -1,7 +1,19 @@
+"""
+    is_valid(x, encoding::Symbol = :none)
+
+Check if `x` has a valid format for `encoding`.
+
+For instance, if `encoding == :one_hot`, at most one bit of `x` can be set to 1.
+"""
 is_valid(x, encoding::Symbol = :none) = is_valid(x, Val(encoding))
 
 is_valid(x, ::Val) = true
 
+"""
+    binarize(x[, domain]; binarization = :one_hot)
+
+Binarize `x` following the `binarization` encoding. If `x` is a vector (instead of a number per say), `domain` is optional.
+"""
 function binarize(x::Vector{T}, d = length(x); binarization = :one_hot) where {T <: Number}
     return collect(Iterators.flatten(map(i -> binarize(i, d; binarization), x)))
 end
@@ -20,6 +32,11 @@ function binarize(x::Vector{T}, d::Vector{D}; binarization=:one_hot
     return collect(Iterators.flatten(map(elt -> binarize(elt[1], elt[2]; binarization), zip(x,d))))
 end
 
+"""
+    debinarize(x[, domain]; binarization = :one_hot)
+
+Transform a binary vector into a number or a set of number. If `domain` is not given, it will compute a default value based on `binarization` and `x`.
+"""
 function debinarize(x; binarization = :one_hot)
     ds::Int = if binarization == :domain_wall
         (-1 + sqrt(1 + 4 * length(x))) ÷ 2 + 1

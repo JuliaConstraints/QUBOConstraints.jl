@@ -2,14 +2,9 @@ module QUBOConstraints
 
 # SECTION - Usings and imports
 using ConstraintDomains
-# using DataFrames
-# using Flux
 using LinearAlgebra
-# using PrettyTables
-
-# import Flux.Optimise: update!
-# import Flux: params
-# import DataFrames: describe
+using TestItemRunner
+using TestItems
 
 # SECTION - exports
 export binarize
@@ -17,7 +12,6 @@ export debinarize
 export is_valid
 export train
 
-# export AbstractOptimizer
 export QUBO_linear_sum
 
 # SECTION - includes

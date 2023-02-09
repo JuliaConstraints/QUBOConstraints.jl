@@ -1,16 +1,19 @@
-using ConstraintDomains
-using DataFrames
-using Flux
-using PrettyTables
-using QUBOConstraints
-using Test
+using TestItemRunner
+using TestItems
 
-import Flux.Optimise: update!
-import Flux: params
+@run_package_tests
 
-include("gradient_descent.jl")
+@testitem "Learn" tags = [:qubo, :learn, :regression] default_imports=false begin
+    using ConstraintDomains
+    using DataFrames
+    using Flux
+    using PrettyTables
+    using QUBOConstraints
+    using Test
 
-@testset "QUBOConstraints.jl" begin
-    include("encoding.jl")
+    import Flux.Optimise: update!
+    import Flux: params
+
+    include("gradient_descent.jl")
     include("learn.jl")
 end

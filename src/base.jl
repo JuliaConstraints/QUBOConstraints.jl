@@ -1,3 +1,8 @@
+"""
+    QUBO_base(n, weight = 1)
+
+A basic QUBO matrix to ensure that binarized variables keep a valid encoding.
+"""
 function QUBO_base(n, weight = 1)
     N = n^2
     M = zeros(N, N)
