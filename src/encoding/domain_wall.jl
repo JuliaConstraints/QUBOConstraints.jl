@@ -45,3 +45,22 @@ function debinarize(x, domains::Vector{D}, ::Val{:domain_wall}
     end
     return map(aux, domains)
 end
+
+## SECTION - Test Items
+@testitem "Domain Wall" tags = [:encoding, :domain_wall] default_imports=false begin
+    using ConstraintDomains
+    using QUBOConstraints
+    using Test
+
+    x = [0,1,2,3,4,5]
+
+    d = domain([0,1,2,3,4])
+    y = [0,1,2,3,4]
+
+    a = [0,0,0,0,0, 1,0,0,0,0, 1,1,0,0,0, 1,1,1,0,0, 1,1,1,1,0, 1,1,1,1,1]
+
+    @test collect(binarize(x; binarization = :domain_wall)) == a
+    @test debinarize(a; binarization = :domain_wall) == x
+
+    @test debinarize(collect(binarize(y, d; binarization = :domain_wall)), d; binarization = :domain_wall) == y
+end

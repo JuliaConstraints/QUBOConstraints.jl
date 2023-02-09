@@ -1,3 +1,8 @@
+"""
+    QUBO_linear_sum(n, σ)
+
+One valid QUBO matrix given `n` variables and parameter `σ` for the linear sum constraint.
+"""
 function QUBO_linear_sum(n, σ)
     N = n^2
     Q = zeros(N,N)

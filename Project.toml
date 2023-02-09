@@ -1,14 +1,18 @@
 name = "QUBOConstraints"
 uuid = "110b7fcc-6942-4061-a625-86e03d1de7cf"
 authors = ["azzaare <jf@baffier.fr> and contributors"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 ConstraintDomains = "5800fd60-8556-4464-8d61-84ebf7a0bedb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
+TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 
 [compat]
 ConstraintDomains = "0.3"
+TestItemRunner = "0.2"
+TestItems = "0.1"
 julia = "1.6"
 
 [extras]
