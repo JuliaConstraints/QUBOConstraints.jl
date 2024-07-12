@@ -3,7 +3,6 @@ module QUBOConstraints
 # SECTION - Usings and imports
 using ConstraintDomains
 using LinearAlgebra
-using TestItemRunner
 using TestItems
 
 # SECTION - exports

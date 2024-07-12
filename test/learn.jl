@@ -1,5 +1,4 @@
 @testset "Linear Regression" begin
-
     X₃₃ = [rand(0:2, 3) for _ in 1:10]
     X₃₃_test = [rand(0:2, 3) for _ in 1:100]
 
@@ -12,48 +11,48 @@
             :train => X₃₃,
             :test => X₃₃_test,
             :encoding => :none,
-            :binarization => :none,
+            :binarization => :none
         ),
         Dict(
             :info => "Domain Wall binarization on ⟦0,2⟧³",
             :train => X₃₃,
             :test => X₃₃_test,
             :encoding => :none,
-            :binarization => :domain_wall,
+            :binarization => :domain_wall
         ),
         Dict(
             :info => "One-Hot binarization on ⟦0,2⟧³",
             :train => X₃₃,
             :test => X₃₃_test,
             :encoding => :none,
-            :binarization => :one_hot,
+            :binarization => :one_hot
         ),
         Dict(
             :info => "Domain Wall pre-encoded on ⟦0,2⟧³",
             :train => B₉,
             :test => B₉_test,
             :encoding => :domain_wall,
-            :binarization => :none,
+            :binarization => :none
         ),
         Dict(
             :info => "One-Hot pre-encoded on ⟦0,2⟧³",
             :train => B₉,
             :test => B₉_test,
             :encoding => :one_hot,
-            :binarization => :none,
-        ),
+            :binarization => :none
+        )
     ]
 
     function all_different(x, encoding)
         encoding == :none && (return allunique(x))
         isv = if encoding == :one_hot
-            mapreduce(i -> is_valid(x[i:i+2], Val(encoding)), *, 1:3:9)
+            mapreduce(i -> is_valid(x[i:(i + 2)], Val(encoding)), *, 1:3:9)
         else
-            mapreduce(i -> is_valid(x[i:i+1], Val(encoding)), *, 1:2:6)
+            mapreduce(i -> is_valid(x[i:(i + 1)], Val(encoding)), *, 1:2:6)
         end
         if isv
             b = all_different(debinarize(x; binarization = encoding), :none)
-            return b ? -1. : 1.
+            return b ? -1.0 : 1.0
         else
             return length(x)
         end

@@ -5,7 +5,7 @@ One valid QUBO matrix given `n` variables and parameter `σ` for the linear sum 
 """
 function QUBO_linear_sum(n, σ)
     N = n^2
-    Q = zeros(N,N)
+    Q = zeros(N, N)
     for i in 1:n, k in 1:n
         a = (i - 1) * n + k
         Q[a, a] = -2 * σ * (k - 1)
