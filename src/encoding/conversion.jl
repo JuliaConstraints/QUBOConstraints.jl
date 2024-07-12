@@ -22,14 +22,16 @@ function binarize(x::T, domain_size::Int; binarization = :one_hot) where {T <: N
     return binarize(x, domain(0:(domain_size - 1)), Val(binarization))
 end
 
-function binarize(x::T, d::D; binarization=:one_hot
+function binarize(x::T, d::D; binarization = :one_hot
 ) where {T <: Number, D <: DiscreteDomain{T}}
     return binarize(x, d, Val(binarization))
 end
 
-function binarize(x::Vector{T}, d::Vector{D}; binarization=:one_hot
+function binarize(x::Vector{T}, d::Vector{D};
+        binarization = :one_hot
 ) where {T <: Number, D <: DiscreteDomain{T}}
-    return collect(Iterators.flatten(map(elt -> binarize(elt[1], elt[2]; binarization), zip(x,d))))
+    return collect(Iterators.flatten(map(
+        elt -> binarize(elt[1], elt[2]; binarization), zip(x, d))))
 end
 
 """
