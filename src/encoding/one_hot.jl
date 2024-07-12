@@ -39,13 +39,13 @@ function debinarize(x, domains, ::Val{:one_hot})
 end
 
 ## SECTION - Test Items
-@testitem "One-Hot" tags = [:encoding, :domain_wall] default_imports=false begin
+@testitem "One-Hot" tags=[:encoding, :domain_wall] default_imports=false begin
     using ConstraintDomains
     using QUBOConstraints
     using Test
 
-    x = [0,1,2,3,4]
-    b = [1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,1]
+    x = [0, 1, 2, 3, 4]
+    b = [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1]
 
     @test collect(binarize(x)) == b
     @test debinarize(b) == x

@@ -1,6 +1,6 @@
 function is_valid(x, ::Val{:domain_wall})
     for (i, b) in enumerate(x)
-        iszero(b) && (return iszero(x[i+1:end]))
+        iszero(b) && (return iszero(x[(i + 1):end]))
     end
     return true
 end
@@ -17,7 +17,8 @@ function binarize(x, d::D, ::Val{:domain_wall}) where {T <: Number, D <: Discret
     return y
 end
 
-function debinarize(x, d::D, ::Val{:domain_wall}) where {T <: Number, D <: DiscreteDomain{T}}
+function debinarize(
+        x, d::D, ::Val{:domain_wall}) where {T <: Number, D <: DiscreteDomain{T}}
     b0::Bool = typeof(d) <: RangeDomain && first(get_domain(d)) == 0
     at_one = true
     val = typemax(T)
@@ -32,7 +33,8 @@ function debinarize(x, d::D, ::Val{:domain_wall}) where {T <: Number, D <: Discr
     return val
 end
 
-function debinarize(x, domains::Vector{D}, ::Val{:domain_wall}
+function debinarize(x, domains::Vector{D},
+        ::Val{:domain_wall}
 ) where {T <: Number, D <: DiscreteDomain{T}}
     start = 0
     stop = 0
@@ -47,20 +49,22 @@ function debinarize(x, domains::Vector{D}, ::Val{:domain_wall}
 end
 
 ## SECTION - Test Items
-@testitem "Domain Wall" tags = [:encoding, :domain_wall] default_imports=false begin
+@testitem "Domain Wall" tags=[:encoding, :domain_wall] default_imports=false begin
     using ConstraintDomains
     using QUBOConstraints
     using Test
 
-    x = [0,1,2,3,4,5]
+    x = [0, 1, 2, 3, 4, 5]
 
-    d = domain([0,1,2,3,4])
-    y = [0,1,2,3,4]
+    d = domain([0, 1, 2, 3, 4])
+    y = [0, 1, 2, 3, 4]
 
-    a = [0,0,0,0,0, 1,0,0,0,0, 1,1,0,0,0, 1,1,1,0,0, 1,1,1,1,0, 1,1,1,1,1]
+    a = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0,
+        1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1]
 
     @test collect(binarize(x; binarization = :domain_wall)) == a
     @test debinarize(a; binarization = :domain_wall) == x
 
-    @test debinarize(collect(binarize(y, d; binarization = :domain_wall)), d; binarization = :domain_wall) == y
+    @test debinarize(collect(binarize(y, d; binarization = :domain_wall)),
+        d; binarization = :domain_wall) == y
 end

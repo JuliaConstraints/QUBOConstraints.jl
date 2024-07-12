@@ -6,69 +6,68 @@ struct GradientDescentOptimizer <: QUBOConstraints.AbstractOptimizer
 end
 
 function GradientDescentOptimizer(;
-    binarization = :one_hot,
-    η = .001,
-    precision = 5,
-    oversampling = false,
+        binarization = :one_hot,
+        η = 0.001,
+        precision = 5,
+        oversampling = false
 )
     return GradientDescentOptimizer(binarization, η, precision, oversampling)
 end
 
-
 predict(x, Q) = transpose(x) * Q * x
 
-loss(x, y, Q) = (predict(x, Q) .-y).^2
+loss(x, y, Q) = (predict(x, Q) .- y) .^ 2
 
 function make_df(X, Q, penalty, binarization, domains)
-	df = DataFrame()
-	for (i,x) in enumerate(X)
-		if i == 1
-			df = DataFrame(transpose(x), :auto)
-		else
-			push!(df, transpose(x))
-		end
-	end
+    df = DataFrame()
+    for (i, x) in enumerate(X)
+        if i == 1
+            df = DataFrame(transpose(x), :auto)
+        else
+            push!(df, transpose(x))
+        end
+    end
 
-	dim = length(df[1,:])
+    dim = length(df[1, :])
 
     if binarization == :none
-        df[!,:penalty] = map(r -> penalty(Vector(r)), eachrow(df))
-        df[!,:predict] = map(r -> predict(Vector(r), Q), eachrow(df[:, 1:dim]))
+        df[!, :penalty] = map(r -> penalty(Vector(r)), eachrow(df))
+        df[!, :predict] = map(r -> predict(Vector(r), Q), eachrow(df[:, 1:dim]))
     else
-        df[!,:penalty] = map(
+        df[!, :penalty] = map(
             r -> penalty(binarize(Vector(r), domains; binarization)),
             eachrow(df)
         )
-        df[!,:predict] = map(
+        df[!, :predict] = map(
             r -> predict(binarize(Vector(r), domains; binarization), Q),
             eachrow(df[:, 1:dim])
         )
     end
 
-	min_false = minimum(
-        filter(:penalty => >(minimum(df[:,:penalty])), df)[:,:predict];
+    min_false = minimum(
+        filter(:penalty => >(minimum(df[:, :penalty])), df)[:, :predict];
         init = typemax(Int)
     )
-    df[!,:shifted] = df[:,:predict] .- min_false
-    df[!,:accurate] = df[:, :penalty] .* df[:,:shifted] .≥ 0.
+    df[!, :shifted] = df[:, :predict] .- min_false
+    df[!, :accurate] = df[:, :penalty] .* df[:, :shifted] .≥ 0.0
 
-	return df
+    return df
 end
 
 function preliminaries(X, domains, binarization)
-    if binarization==:none
+    if binarization == :none
         n = length(first(X))
-        return X, zeros(n,n)
+        return X, zeros(n, n)
     else
         Y = map(x -> collect(binarize(x, domains; binarization)), X)
         n = length(first(Y))
-        return Y, zeros(n,n)
+        return Y, zeros(n, n)
     end
 end
 
 function preliminaries(X, _)
     n = length(first(X))
-    return X, zeros(n,n)
+    return X, zeros(n, n)
 end
 
 function train!(Q, X, penalty, η, precision, X_test, oversampling, binarization, domains)
@@ -77,7 +76,8 @@ function train!(Q, X, penalty, η, precision, X_test, oversampling, binarization
         penalty(first(X))
     catch e
         if isa(e, UndefKeywordError)
-            penalty = (x; dom_size = δ_extrema(Iterators.flatten(X)))-> penalty(x; dom_size)
+            penalty = (x; dom_size = δ_extrema(Iterators.flatten(X))) -> penalty(
+                x; dom_size)
         else
             throw(e)
         end
@@ -87,18 +87,18 @@ function train!(Q, X, penalty, η, precision, X_test, oversampling, binarization
         Q .-= η * grads[Q]
     end
 
-    Q[:,:] = round.(precision*Q)
+    Q[:, :] = round.(precision * Q)
 
     df = make_df(X_test, Q, penalty, binarization, domains)
     return pretty_table(describe(df[!, [:penalty, :predict, :shifted, :accurate]]))
 end
 
 function train(
-    X,
-    penalty,
-    domains::Vector{D};
-    optimizer = GradientDescentOptimizer(),
-    X_test = X,
+        X,
+        penalty,
+        domains::Vector{D};
+        optimizer = GradientDescentOptimizer(),
+        X_test = X
 ) where {D <: DiscreteDomain}
     Y, Q = preliminaries(X, domains, optimizer.binarization)
     train!(
@@ -109,11 +109,11 @@ function train(
 end
 
 function train(
-    X,
-    penalty,
-    dom_stuff = nothing;
-    optimizer = GradientDescentOptimizer(),
-    X_test = X,
+        X,
+        penalty,
+        dom_stuff = nothing;
+        optimizer = GradientDescentOptimizer(),
+        X_test = X
 )
     return train(X, penalty, to_domains(X, dom_stuff); optimizer, X_test)
 end
