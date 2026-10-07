@@ -1,0 +1,124 @@
+@testitem "Q1 canonical polynomial and codebooks" tags=[:q1] begin
+    using LinearAlgebra
+    x, y = BitID(:x, 1), BitID(:y, 1)
+    q = QUBOComponent([y, x]; linear = [(1, 2), (2, -1), (1, -2)],
+        quadratic = [(1, 2, 4), (2, 1, -1), (2, 2, 2)], offset = -3)
+    expected = QUBOComponent([x, y]; linear = [(1, 1)], quadratic = [(1, 2, 3)], offset = -3)
+    @test canonical_equal(q, expected)
+    d = dense_qubo(q)
+    for z in ([false,false], [false,true], [true,false], [true,true])
+        @test energy(q, z) == -3 + z[1] + 3z[1]*z[2]
+        @test energy(q, z) == dot(z, d.matrix*z) + d.offset
+    end
+    @test_throws ArgumentError energy(q, [2, 0])
+    @test_throws DimensionMismatch energy(q, [true])
+    @test_throws ArgumentError QUBOComponent([x, x])
+    @test_throws ArgumentError QUBOComponent([x]; linear = [(2, 1)])
+    @test_throws ArgumentError QUBOComponent([x]; offset = Inf, coefficient_type = Float64)
+    huge = QUBOComponent([x]; linear = [(1, typemax(Int)), (1, 1)])
+    @test energy(huge, [true]) == big(typemax(Int)) + 1
+    rational = QUBOComponent([x]; linear = [(1, 1//3)], coefficient_type = Rational{BigInt})
+    @test energy(rational, [true]) == 1//3
+    @test_throws ArgumentError BitID(:x, 0)
+    @test_throws ArgumentError BitID(:x, 1; role = :embedding)
+    for enc in (:one_hot, :domain_wall), values in ([3, 9, 17], [typemax(Int)], ["a", "b"])
+        book = codebook(:v, values; encoding = enc)
+        for value in values
+            decoded = decode_code(book, encode_code(book, value))
+            @test decoded.valid && decoded.value == value
+        end
+        @test !decode_code(book, fill(2, length(book.bits) + 1)).valid
+    end
+    redundant = Codebook(:x, [x], [7], reshape([false, true], 1, 2), [1, 1])
+    @test size(encoded_codes(redundant, 7)) == (1, 2)
+    @test decode_code(redundant, [true]).value == 7
+    @test_throws ArgumentError encode_code(redundant, 8)
+    @test_throws ArgumentError Codebook(:x, [x], [0, 1], [false false], [1,2])
+    @test_throws ArgumentError Codebook(:x, [x], [0, 1], reshape([false], 1, 1), [1])
+    for n in 1:5
+        bits = reverse([BitID(:v,i) for i in 1:n])
+        terms = [(i,j,mod(3i+j,7)-3) for i in 1:n for j in 1:n]
+        candidate = QUBOComponent(bits; quadratic=terms,offset=2)
+        for mask in 0:(2^n-1)
+            z = [!iszero(mask & (1 << (i-1))) for i in 1:n]
+            original = reverse(z)
+            expected_polynomial = 2 + sum(v*original[i]*original[j] for (i,j,v) in terms)
+            @test energy(candidate,z) == expected_polynomial
+        end
+    end
+    floatq = QUBOComponent([x,y]; linear=[(1,2.0)],coefficient_type=Float64)
+    @test (@inferred QUBOComponent{Float64}([x,y]; linear=[(1,2.0)])) isa QUBOComponent{Float64}
+    @test (@inferred energy(floatq,[true,false])) == 2.0
+end
+
+@testitem "Q1 exhaustive oracle, auxiliaries and invalid encodings" tags=[:q1] begin
+    book = codebook(:x, 0:1; encoding = :domain_wall)
+    x = only(book.bits)
+    aux = BitID(:witness, 1; role = :semantic_auxiliary)
+    # E = (x-a)^2 + x; minimization over a gives x exactly.
+    q = QUBOComponent([x, aux]; linear = [(1,2), (2,1)], quadratic = [(1,2,-2)],
+        codebooks = [book], auxiliary_meanings = Dict(aux => "copy of x"))
+    r = exhaustive_check(q, v -> v[1] == 0; oracle_id = "x-eq-zero", profile = :indicator_exact)
+    @test r.status === :pass && r.proof === :exhaustive
+    @test r.evaluations == 4 && r.valid_codes == 2 && r.invalid_codes == 0
+    @test r.min_violation == 1
+    @test exhaustive_check(q, _ -> true; oracle_id = "always").status === :fail
+    @test exhaustive_check(q, _ -> 1; oracle_id = "bad-oracle").status === :failed
+    @test exhaustive_check(q, _ -> error("oracle failed"); oracle_id = "bad-oracle").status === :failed
+    @test exhaustive_check(q, _ -> true; oracle_id = "budget", max_states = 2).status === :unknown
+    @test exhaustive_check(q, _ -> true; oracle_id = "timeout", time_limit = 1e-12).status === :unknown
+    @test exhaustive_check(q, _ -> true; oracle_id = "surrogate", profile = :surrogate).status === :surrogate
+    @test_throws ArgumentError exhaustive_check(q, _ -> true; oracle_id = "gap", gap=0)
+    @test_throws ArgumentError exhaustive_check(q, _ -> true; oracle_id = "gap", gap=1, atol=0.5)
+    near = QUBOComponent(book.bits; linear=[(1, (big(2)^54-1)//big(2)^54)],
+        coefficient_type=Rational{BigInt},codebooks=[book])
+    @test exhaustive_check(near, v -> only(v)==0; oracle_id="strict-gap",gap=1.0).status === :fail
+    oh = codebook(:v, [5, 9])
+    # (1-u-v)^2 protects both invalid one-hot codes.
+    valid = QUBOComponent(oh.bits; offset=1, linear=[(1,-1),(2,-1)],
+        quadratic=[(1,2,2)], codebooks=[oh])
+    vr = exhaustive_check(valid, _ -> true; oracle_id="one-hot-validity")
+    @test vr.status === :pass && vr.invalid_codes == 2
+    invalid = QUBOComponent(oh.bits; codebooks=[oh])
+    ir = exhaustive_check(invalid, _ -> true; oracle_id="missing-validity")
+    @test ir.status === :fail && !ir.counterexample.valid_code
+    @test ir.counterexample.primary_mask == 0
+    # A redundant value must have correct energy for BOTH codes to compose safely.
+    redundant = Codebook(:x, [x], [7], [false true], [1,1])
+    mismatch = QUBOComponent([x]; linear=[(1,1)], codebooks=[redundant])
+    @test exhaustive_check(mismatch, _ -> true; oracle_id="redundancy").status === :fail
+    constant = QUBOComponent(BitID[]; codebooks=[codebook(:c, [42]; encoding=:domain_wall)])
+    @test exhaustive_check(constant, v -> only(v)==42; oracle_id="singleton").evaluations == 1
+    floatq = QUBOComponent(book.bits; linear=[(1,1.0)], coefficient_type=Float64, codebooks=[book])
+    @test exhaustive_check(floatq, v -> only(v)==0; oracle_id="float").proof === :validated
+    @test_throws ArgumentError exhaustive_check(QUBOComponent([x]), _ -> true; oracle_id="missing-book")
+end
+
+@testitem "Q1 composition and certificate artifacts" tags=[:q1] begin
+    using TOML
+    book = codebook(:x, 0:1; encoding=:domain_wall)
+    x = only(book.bits)
+    a = BitID(:a, 1; role=:quadratization_auxiliary)
+    q = QUBOComponent([x,a]; linear=[(1,2),(2,1)], quadratic=[(1,2,-2)], codebooks=[book])
+    combined = compose(q,q)
+    @test length(combined.bits) == 3
+    @test length(combined.auxiliary_meanings) == 2
+    r = exhaustive_check(combined, v -> only(v)==0; oracle_id="double-zero")
+    @test r.status === :pass && r.min_violation == 2
+    @test exhaustive_check(combined, v -> only(v)==0; oracle_id="double-zero", profile=:indicator_exact).status === :fail
+    different = codebook(:x, [1,0]; encoding=:domain_wall)
+    @test_throws ArgumentError compose(q, QUBOComponent(different.bits; codebooks=[different]))
+    @test_throws ArgumentError compose(rename_auxiliaries(q,:right), q)
+    data = component_artifact(combined; report=r)
+    @test data["schema_version"] == "qubo-component/1"
+    @test data["certificate"]["proof"] == "exhaustive"
+    @test length(data["sha256"]) == 64
+    text = sprint(io -> write_component(io, combined; report=r))
+    @test TOML.parse(text)["sha256"] == data["sha256"]
+    @test_throws ArgumentError component_artifact(q; report=r)
+    bad = exhaustive_check(q, _ -> true; oracle_id="bad")
+    @test haskey(component_artifact(q; report=bad)["certificate"], "counterexample")
+    # Altered codebooks must invalidate old evidence even with an identical polynomial.
+    combined.codebooks[1].values[1] = 100
+    @test_throws ArgumentError component_artifact(combined; report=r)
+end

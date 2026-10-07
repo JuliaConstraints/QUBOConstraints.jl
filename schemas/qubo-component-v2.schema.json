@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QUBO component export v2 with structured codebooks",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "convention", "coefficient_type", "offset", "bits", "linear", "quadratic", "codebooks", "auxiliaries", "applicability", "provenance", "sha256"],
+  "properties": {
+    "schema_version": {"const": "qubo-component/2"},
+    "convention": {"$ref": "qubo-component-v1.schema.json#/properties/convention"},
+    "coefficient_type": {"$ref": "qubo-component-v1.schema.json#/properties/coefficient_type"},
+    "offset": {"type": "string"},
+    "bits": {"$ref": "qubo-component-v1.schema.json#/properties/bits"},
+    "linear": {"$ref": "qubo-component-v1.schema.json#/properties/linear"},
+    "quadratic": {"$ref": "qubo-component-v1.schema.json#/properties/quadratic"},
+    "auxiliaries": {"$ref": "qubo-component-v1.schema.json#/properties/auxiliaries"},
+    "certificate": {"$ref": "qubo-component-v1.schema.json#/properties/certificate"},
+    "sha256": {"$ref": "qubo-component-v1.schema.json#/properties/sha256"},
+    "applicability": {"type": "string"},
+    "provenance": {"type": "string"},
+    "codebooks": {"type": "array", "items": {"oneOf": [
+      {"$ref": "qubo-component-v1.schema.json#/properties/codebooks/items"},
+      {"type": "object", "additionalProperties": false,
+       "required": ["variable", "bits", "values", "representation", "encoding", "weights", "coefficient_bound"],
+       "properties": {
+         "variable": {"type": "string"},
+         "bits": {"type": "array", "items": {"$ref": "qubo-component-v1.schema.json#/$defs/bit"}},
+         "values": {"type": "array", "items": {"$ref": "qubo-component-v1.schema.json#/$defs/value"}},
+         "representation": {"const": "structured/1"},
+         "encoding": {"enum": ["native", "one_hot", "zero_one_hot", "domain_wall", "unary", "binary", "bounded_binary", "gray", "arithmetic", "bounded_coefficient", "fibonacci"]},
+         "weights": {"type": "array", "items": {"type": "string", "pattern": "^[0-9]+$"}},
+         "coefficient_bound": {"type": "string", "pattern": "^[1-9][0-9]*$"}
+       }}
+    ]}}
+  }
+}
