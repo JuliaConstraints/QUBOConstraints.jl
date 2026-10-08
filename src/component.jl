@@ -160,13 +160,31 @@ function compose(a::QUBOComponent{T}, original::QUBOComponent{S};
     end
     bits = sort!(unique(vcat(a.bits, b.bits)))
     pos = Dict(bit => i for (i, bit) in enumerate(bits))
-    linear = [(pos[q.bits[i]], v) for q in (a, b) for (i, v) in _linear_terms(q)]
-    quadratic = [(pos[q.bits[i]], pos[q.bits[j]], v)
-        for q in (a, b) for (i, j, v) in _quadratic_terms(q)]
     R = T === Float64 || S === Float64 ? Float64 : promote_type(T, S)
+    linear = Tuple{Int,R}[]
+    quadratic = Tuple{Int,Int,R}[]
+    sizehint!(linear, nnz(a.linear) + nnz(b.linear))
+    sizehint!(quadratic, nnz(a.quadratic) + nnz(b.quadratic))
+    _append_composed_terms!(linear, quadratic, pos, a)
+    _append_composed_terms!(linear, quadratic, pos, b)
     return QUBOComponent{R}(bits; linear, quadratic, offset = a.offset + b.offset,
         codebooks = books,
         auxiliary_meanings = merge(a.auxiliary_meanings, b.auxiliary_meanings),
         applicability = "(" * a.applicability * ") AND (" * b.applicability * ")",
         provenance = "add(" * a.provenance * ", " * b.provenance * ")")
+end
+
+# Keep sparse traversal specialized for each input coefficient type while
+# converting into the final promoted term buffers.
+function _append_composed_terms!(linear::Vector{Tuple{Int,R}},
+        quadratic::Vector{Tuple{Int,Int,R}}, positions, q::QUBOComponent) where R
+    for p in eachindex(nonzeros(q.linear))
+        i = q.linear.nzind[p]
+        push!(linear, (positions[q.bits[i]], nonzeros(q.linear)[p]))
+    end
+    for j in axes(q.quadratic, 2), p in nzrange(q.quadratic, j)
+        push!(quadratic, (positions[q.bits[rowvals(q.quadratic)[p]]],
+            positions[q.bits[j]], nonzeros(q.quadratic)[p]))
+    end
+    return nothing
 end

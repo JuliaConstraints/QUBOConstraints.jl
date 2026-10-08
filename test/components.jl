@@ -239,3 +239,64 @@ end
     combined.codebooks[1].values[1] = 100
     @test_throws ArgumentError component_artifact(combined; report=r)
 end
+@testitem "Composition streams exact owned sparse terms" tags=[:q1] begin
+    rename(bit)=bit.role===:primary ? bit :
+        BitID(Symbol(:right,"/",bit.owner),bit.index;role=bit.role)
+    for T in (BigInt,Rational{BigInt},Float64),S in (BigInt,Rational{BigInt},Float64),width in (0,1,2,8)
+        books=[codebook(Symbol(:x,i),0:1;encoding=:domain_wall) for i in 1:width]
+        primary=BitID[b for book in books for b in book.bits]
+        bits=vcat(primary,[BitID(:aux,i;role=:quadratization_auxiliary) for i in 1:width])
+        left_linear=[(i,T(mod(i,5)-2)) for i in eachindex(bits)]
+        right_linear=[(i,S(mod(i,7)-3)) for i in eachindex(bits)]
+        left_quadratic=[(i,i+1,T(2)) for i in 1:length(bits)-1]
+        right_quadratic=[(i,i+1,S(-1)) for i in 1:length(bits)-1]
+        a=QUBOComponent{T}(bits;linear=left_linear,quadratic=left_quadratic,offset=1,
+            codebooks=books,auxiliary_meanings=Dict(bit=>"left" for bit in bits if bit.role!==:primary),
+            applicability="left",provenance="left")
+        b=QUBOComponent{S}(reverse(bits);linear=right_linear,quadratic=right_quadratic,offset=-2,
+            codebooks=books,auxiliary_meanings=Dict(bit=>"right" for bit in bits if bit.role!==:primary),
+            applicability="right",provenance="right")
+        combined=compose(a,b)
+        R=T===Float64 || S===Float64 ? Float64 : promote_type(T,S)
+        @test combined isa QUBOComponent{R}
+        @test length(combined.bits)==3width
+        @test combined.offset==R(-1)
+        @test combined.applicability=="(left) AND (right)"
+        @test combined.provenance=="add(left, right)"
+        @test all(combined.auxiliary_meanings[bit]=="left" for bit in a.bits if bit.role!==:primary)
+        @test all(combined.auxiliary_meanings[rename(bit)]=="right" for bit in b.bits if bit.role!==:primary)
+        @test length(combined.codebooks)==width
+        @test combined.bits!==a.bits && combined.bits!==b.bits
+        @test combined.linear!==a.linear && combined.quadratic!==b.quadratic
+        @test all(zip(books,combined.codebooks)) do pair
+            input,owned=pair
+            input!==owned && input.values==owned.values && input.values!==owned.values &&
+                input.codes==owned.codes && input.codes!==owned.codes
+        end
+        positions=Dict(bit=>i for (i,bit) in enumerate(combined.bits))
+        patterns=width<=2 ? [[isodd(mask>>(i-1)) for i in eachindex(combined.bits)]
+            for mask in 0:(1<<length(combined.bits))-1] :
+            [[pattern(i) for i in eachindex(combined.bits)] for pattern in
+                (i->false,i->true,isodd,i->mod(i,3)==0)]
+        for z in patterns
+            left=[z[positions[bit]] for bit in bits]
+            right=[z[positions[rename(bit)]] for bit in reverse(bits)]
+            expected=T(1)+sum(v*left[i] for (i,v) in left_linear;init=zero(T))+
+                sum(v*left[i]*left[j] for (i,j,v) in left_quadratic;init=zero(T))+
+                S(-2)+sum(v*right[i] for (i,v) in right_linear;init=zero(S))+
+                sum(v*right[i]*right[j] for (i,j,v) in right_quadratic;init=zero(S))
+            @test energy(combined,z)==expected
+        end
+        artifact=component_artifact(combined)
+        if width>0
+            a.codebooks[1].values[1]=99
+            a.auxiliary_meanings[only(filter(bit->bit.index==1 && bit.role!==:primary,a.bits))]="changed"
+            @test component_artifact(combined)==artifact
+        end
+    end
+    bits=[BitID(:fraction,1)]
+    rational=QUBOComponent{Rational{BigInt}}(bits;linear=[(1,1//3)])
+    float=QUBOComponent{Float64}(bits)
+    @test energy(compose(float,rational),[true])==Float64(1//3)
+    @test energy(compose(rational,float),[true])==Float64(1//3)
+end

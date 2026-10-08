@@ -13,7 +13,6 @@ source = "scenarios.jl"
     [scenarios.parameters]
     arity = 1
     width = 16
-
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "atomic_construction_case"
@@ -26,7 +25,6 @@ source = "scenarios.jl"
     [scenarios.parameters]
     arity = 2
     width = 16
-
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "atomic_construction_case"
@@ -39,7 +37,6 @@ source = "scenarios.jl"
     [scenarios.parameters]
     arity = 3
     width = 8
-
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "atomic_validation_case"
@@ -52,7 +49,6 @@ source = "scenarios.jl"
     [scenarios.parameters]
     arity = 1
     width = 16
-
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "atomic_validation_case"
@@ -65,7 +61,6 @@ source = "scenarios.jl"
     [scenarios.parameters]
     arity = 2
     width = 16
-
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "atomic_validation_case"
@@ -78,7 +73,6 @@ source = "scenarios.jl"
     [scenarios.parameters]
     arity = 3
     width = 8
-
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "component_construction_case"
@@ -214,7 +208,6 @@ source = "scenarios.jl"
     operation = "delta"
     repetitions = 1024
     variables = 128
-
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "component_codebook_case"
@@ -227,7 +220,6 @@ source = "scenarios.jl"
     [scenarios.parameters]
     codebooks = 64
     coefficient_type = "float"
-
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "component_codebook_case"
@@ -240,3 +232,51 @@ source = "scenarios.jl"
     [scenarios.parameters]
     codebooks = 64
     coefficient_type = "exact"
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_composition_case"
+id = "compose_bare_float_64"
+implementation = "owned-streamed-composed-terms-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    shape = "bare_float"
+    width = 64
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_composition_case"
+id = "compose_bare_exact_64"
+implementation = "owned-streamed-composed-terms-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    shape = "bare_exact"
+    width = 64
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_composition_case"
+id = "compose_mixed_float_64"
+implementation = "owned-streamed-composed-terms-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    shape = "mixed_float"
+    width = 64
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_composition_case"
+id = "compose_mixed_rational_64"
+implementation = "owned-streamed-composed-terms-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    shape = "mixed_rational"
+    width = 64

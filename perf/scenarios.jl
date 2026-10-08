@@ -2,6 +2,66 @@ import QUBOConstraints as QC
 using Random
 const VG = QC.ValuePairGuidance
 
+"Complete composition with shared primary books, renamed auxiliaries and promoted coefficients."
+function component_composition_case(parameters)
+    width=get(parameters,"width",64)
+    width>=0 || throw(ArgumentError("nonnegative composition width required"))
+    shape=get(parameters,"shape","mixed_float")
+    T,S,with_books=shape=="bare_float" ? (Float64,Float64,false) :
+        shape=="bare_exact" ? (BigInt,BigInt,false) :
+        shape=="mixed_float" ? (Float64,BigInt,true) :
+        shape=="mixed_rational" ? (BigInt,Rational{BigInt},true) :
+        throw(ArgumentError("unknown composition shape"))
+    books=with_books ? [QC.codebook(Symbol(:x,i),0:1;encoding=:domain_wall) for i in 1:width] :
+        QC.AbstractCodebook[]
+    primary=with_books ? QC.BitID[b for book in books for b in book.bits] :
+        [QC.BitID(:x,i) for i in 1:width]
+    bits=vcat(primary,[QC.BitID(:aux,i;role=:quadratization_auxiliary) for i in 1:width])
+    right_bits=reverse(bits)
+    left_linear=[(i,T(mod(i,5)-2)) for i in eachindex(bits)]
+    right_linear=[(i,S===Rational{BigInt} ? S((mod(i,7)-3)//3) : S(mod(i,7)-3)) for i in eachindex(bits)]
+    left_quadratic=[(i,i+1,T(2)) for i in 1:length(bits)-1]
+    right_quadratic=[(i,i+1,S(-1)) for i in 1:length(bits)-1]
+    meanings=Dict(bit=>"original auxiliary" for bit in bits if bit.role!==:primary)
+    a=QC.QUBOComponent{T}(bits;linear=left_linear,quadratic=left_quadratic,offset=1,
+        codebooks=books,auxiliary_meanings=meanings,applicability="left",provenance="left")
+    b=QC.QUBOComponent{S}(right_bits;linear=right_linear,quadratic=right_quadratic,offset=-2,
+        codebooks=books,auxiliary_meanings=meanings,applicability="right",provenance="right")
+    rename(bit)=bit.role===:primary ? bit :
+        QC.BitID(Symbol(:right,"/",bit.owner),bit.index;role=bit.role)
+    expected_bits=sort!(unique(vcat(bits,rename.(right_bits))))
+    R=T===Float64 || S===Float64 ? Float64 : promote_type(T,S)
+    state=(;a,b,bits,right_bits,left_linear,right_linear,left_quadratic,right_quadratic,expected_bits)
+    prepare=()->state
+    operation=s->QC.compose(s.a,s.b)
+    verify=(s,q)->begin
+        q isa QC.QUBOComponent{R} && q.bits==s.expected_bits &&
+            q.applicability=="(left) AND (right)" && q.provenance=="add(left, right)" || return false
+        length(q.codebooks)==length(s.a.codebooks) || return false
+        all(zip(s.a.codebooks,q.codebooks)) do pair
+            input,owned=pair
+            input!==owned && input.values==owned.values && input.values!==owned.values &&
+                input.codes==owned.codes && input.codes!==owned.codes
+        end || return false
+        q.auxiliary_meanings==merge(s.a.auxiliary_meanings,
+            Dict(rename(bit)=>text for (bit,text) in s.b.auxiliary_meanings)) || return false
+        positions=Dict(bit=>i for (i,bit) in enumerate(q.bits))
+        for pattern in (i->false,i->true,isodd,i->mod(i,3)==0)
+            z=[pattern(i) for i in eachindex(q.bits)]
+            left=[z[positions[bit]] for bit in s.bits]
+            right=[z[positions[rename(bit)]] for bit in s.right_bits]
+            expected=s.a.offset+sum(v*left[i] for (i,v) in s.left_linear;init=zero(s.a.offset))+
+                sum(v*left[i]*left[j] for (i,j,v) in s.left_quadratic;init=zero(s.a.offset))+
+                s.b.offset+sum(v*right[i] for (i,v) in s.right_linear;init=zero(s.b.offset))+
+                sum(v*right[i]*right[j] for (i,j,v) in s.right_quadratic;init=zero(s.b.offset))
+            QC.energy(q,z)==expected || return false
+        end
+        true
+    end
+    (;prepare,operation,verify)
+end
+
+
 function atomic_fixture(parameters)
     width = get(parameters, "width", 16)
     arity = get(parameters, "arity", 2)
