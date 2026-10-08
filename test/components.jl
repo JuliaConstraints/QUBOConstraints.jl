@@ -349,6 +349,56 @@ end
         @test nonzeros(q.linear)==[huge]
     end
 end
+@testitem "Canonical bit sorting owns vector and view inputs" tags=[:q1] begin
+    for T in (Float64,BigInt,Rational{BigInt}),n in (0,1,2,8,32),shape in (:vector,:view,:strided)
+        coefficient(v)=T===Rational{BigInt} ? T(v//3) : T(v)
+        original=reverse([BitID(Symbol(:owner,mod(i,3)),i;
+            role=isodd(i) ? :primary : :semantic_auxiliary) for i in 1:n])
+        storage=shape===:vector ? copy(original) :
+            [BitID(:padding,i) for i in 1:2n+2]
+        bits=if shape===:vector
+            storage
+        elseif shape===:view
+            storage[2:n+1]=original
+            view(storage,2:n+1)
+        else
+            storage[2:2:2n]=original
+            view(storage,2:2:2n)
+        end
+        before=copy(storage)
+        linear=[(i,coefficient(mod(i,7)-3)) for i in 1:n]
+        quadratic=[(i,i,coefficient(1)) for i in 1:n]
+        append!(quadratic,[(i,i+1,coefficient(3)) for i in 1:n-1])
+        append!(quadratic,[(i+1,i,coefficient(-1)) for i in 1:n-1])
+        q=QUBOComponent{T}(bits;linear,quadratic,offset=2)
+        @test storage==before && bits==original
+        @test q.bits==sort(original) && q.bits!==bits
+        @test allunique(q.bits) && issorted(q.bits)
+        positions=Dict(bit=>i for (i,bit) in enumerate(q.bits))
+        for pattern in (i->false,i->true,isodd,i->mod(i,3)==0)
+            input=[pattern(i) for i in 1:n]
+            ordered=falses(n)
+            for i in 1:n
+                ordered[positions[original[i]]]=input[i]
+            end
+            value=T(2)+sum(v*input[i] for (i,v) in linear;init=zero(T))+
+                sum(v*input[i]*input[j] for (i,j,v) in quadratic;init=zero(T))
+            @test energy(q,ordered)==value
+        end
+        artifact=component_artifact(q)
+        if n>0
+            bits[1]=BitID(:changed_input,1)
+            @test component_artifact(q)==artifact
+            input_snapshot=copy(storage)
+            q.bits[1]=BitID(:changed_result,1)
+            @test storage==input_snapshot
+        end
+    end
+    duplicate=[BitID(:same,1),BitID(:same,1)]
+    original=copy(duplicate)
+    @test_throws ArgumentError QUBOComponent(duplicate)
+    @test duplicate==original
+end
 @testitem "Immutable bit copies preserve owned buffer relationships" tags=[:q1] begin
     @test all(T->T===Symbol || isbitstype(T),fieldtypes(BitID))
     for owner in (:x,Symbol("space/λ"),Symbol("")),role in (:primary,:semantic_auxiliary,:quadratization_auxiliary),index in (1,17,typemax(Int))

@@ -22,7 +22,7 @@ struct QUBOComponent{T<:Real}
         T in (BigInt, Rational{BigInt}, Float64) || throw(ArgumentError(
             "supported coefficients: BigInt, Rational{BigInt}, Float64"))
         allunique(bits) || throw(ArgumentError("duplicate bit identity"))
-        ordered = sort(collect(bits))
+        ordered = sort!(collect(bits))
         positions = Dict(b => i for (i, b) in enumerate(ordered))
         remap = [positions[b] for b in bits]
         n = length(bits)
