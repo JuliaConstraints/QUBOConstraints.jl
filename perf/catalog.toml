@@ -1,0 +1,138 @@
+root = ".."
+schema_version = "perfchecker-scenario-catalog/1"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_construction_case"
+id = "construct_float_128"
+implementation = "canonical-owned-sparse-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 128
+    coefficient_type = "float"
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_construction_case"
+id = "construct_exact_128"
+implementation = "canonical-owned-sparse-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 128
+    coefficient_type = "exact"
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "numeric_energy_case"
+id = "numeric_energy_int"
+implementation = "binary-input-direct-energy-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 1024
+    input_type = "integer"
+    repetitions = 1024
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "numeric_energy_case"
+id = "numeric_energy_float"
+implementation = "binary-input-direct-energy-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 1024
+    input_type = "float"
+    repetitions = 1024
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "value_pair_case"
+id = "value_pair_scan_delta"
+implementation = "whole-interaction-reference-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    operation = "scan_delta"
+    repetitions = 1024
+    variables = 128
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "value_pair_case"
+id = "value_pair_sparse_delta"
+implementation = "owned-adjacency-adaptive-v2"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    operation = "delta"
+    repetitions = 1024
+    variables = 128
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "value_pair_case"
+id = "value_pair_scope_absolute"
+implementation = "owned-adjacency-adaptive-v2"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    depth = 4
+    mode = "absolute"
+    operation = "scope"
+    repetitions = 1024
+    variables = 128
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "value_pair_case"
+id = "value_pair_scope_conditional"
+implementation = "owned-adjacency-adaptive-v2"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    depth = 8
+    mode = "conditional"
+    operation = "scope"
+    repetitions = 1024
+    variables = 128
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "value_pair_case"
+id = "value_pair_proposal_conditional"
+implementation = "owned-adjacency-adaptive-v2"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    depth = 8
+    mode = "conditional"
+    operation = "proposal"
+    repetitions = 1024
+    variables = 128
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "value_pair_case"
+id = "value_pair_dense_delta"
+implementation = "owned-adjacency-adaptive-v2"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    moved_variables = 128
+    operation = "delta"
+    repetitions = 1024
+    variables = 128

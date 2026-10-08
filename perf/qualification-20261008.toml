@@ -1,0 +1,2909 @@
+baseline_commit = "3e5612ce5c20af3f115c4dd9afa146878c57b0ca"
+benchmarktools = "1.7.0"
+blas_threads = 1
+chairmarks = "1.3.1"
+changes = ["Reuse canonical owned sparse matrix after diagonal removal instead of reconstructing it.", "Traverse validated numeric binary values directly, avoiding Bool vector conversion.", "Add explicitly bound value-pair guidance with owned adjacency/epoch scratch, sparse simultaneous deltas, a full-scan fallback for wide moves, cached absolute strengths and reserved scope/proposal buffers."]
+cpu_affinity = [12, 14]
+gc_threads = 1
+julia = "1.13.1"
+julia_threads = 2
+mathoptinterface = "1.54.0"
+native_solver_threads = 1
+perfchecker = "1.0.0"
+precompile_tasks = 1
+profile_semantics = "CPU samples and allocation events are separate. Allocation byte/count totals are independent operation measurements; sampled stacks are not used to infer those totals."
+qualification = "Operation and preparation scopes are explicit. All observations use owned state and independent oracles. Concurrent overnight tasks were active; timings are operational comparisons, not controlled scaling. Allocation counts describe Julia-managed operation allocations; native solver and whole-process memory are separate."
+recorded_utc = "2026-10-08T20:46:15.898"
+remaining_hotspots = ["Construction still has 38 JET reports per concrete coefficient fixture, including abstract heterogeneous codebook metadata and generic error/show paths; zero dispatch in energy/guidance does not imply zero construction dispatch.", "AllocCheck retains potential vector-growth sites despite constructor-reserved workspace capacity; fresh-state oracle measurements and direct tests show zero operation allocations at qualified bounds.", "Conditional scope and proposal field construction still traverse the full interaction array.", "Wide moves use the full-scan fallback; the sparse-only prototype regressed on 32/128-variable moves and is not the published implementation.", "Additional per-workspace cache memory is measured separately from operation allocations; guide and workspace construction are excluded from operation timing.", "Exact BigInt and floating construction timing was mixed, so the constructor claim is an allocation reduction."]
+schema = "qualified-performance-increment/1"
+unavailable = ["Linux perf counters denied by perf_event_paranoid=4; kernel policy unchanged."]
+
+[[analyzers]]
+analysis_scope = "operation specialized for prepared state type; synchronization excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 38
+quality = "not_checked"
+scenario = "construct_float_128"
+status = "complete"
+summary = ""
+tool = "jet"
+tool_version = "0.12.3"
+
+    [analyzers.measurements]
+
+    [[analyzers.representative_findings]]
+    message = "RuntimeDispatchReport(runtime dispatch detected: show(io::IOContext{IOBuffer}, b::Any)::Any)"
+    rule = "inference.runtime_dispatch"
+
+        [analyzers.representative_findings.location]
+        file = "show.jl"
+        line = 2716
+[[analyzers]]
+analysis_scope = "operation specialized for prepared state type; synchronization excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 38
+quality = "not_checked"
+scenario = "construct_exact_128"
+status = "complete"
+summary = ""
+tool = "jet"
+tool_version = "0.12.3"
+
+    [analyzers.measurements]
+
+    [[analyzers.representative_findings]]
+    message = "RuntimeDispatchReport(runtime dispatch detected: show(io::IOContext{IOBuffer}, b::Any)::Any)"
+    rule = "inference.runtime_dispatch"
+
+        [analyzers.representative_findings.location]
+        file = "show.jl"
+        line = 2716
+[[analyzers]]
+analysis_scope = "operation specialized for prepared state type; synchronization excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "numeric_energy_int"
+status = "complete"
+summary = ""
+tool = "jet"
+tool_version = "0.12.3"
+
+    [analyzers.measurements]
+[[analyzers]]
+analysis_scope = "static operation specialization; tool exception-path defaults; not a universal allocation guarantee"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 139
+quality = "not_checked"
+scenario = "construct_float_128"
+status = "complete"
+summary = ""
+tool = "alloccheck"
+tool_version = "0.2.6"
+
+    [analyzers.measurements]
+
+    [[analyzers.representative_findings]]
+    message = """Allocation of Vector{QUBOConstraints.Codebook} in ./boot.jl:649\n  | return $(Expr(:new, :self, :(memoryref(mem)), :((m,))))\n\nStacktrace:\n [1] Array\n   @ ./boot.jl:649 [inlined]\n [2] getindex\n   @ ./array.jl:436 [inlined]\n [3] QUBOComponent\n"""
+    rule = "allocation.potential"
+
+        [analyzers.representative_findings.location]
+        file = "./boot.jl"
+        line = 649
+[[analyzers]]
+analysis_scope = "static operation specialization; tool exception-path defaults; not a universal allocation guarantee"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 143
+quality = "not_checked"
+scenario = "construct_exact_128"
+status = "complete"
+summary = ""
+tool = "alloccheck"
+tool_version = "0.2.6"
+
+    [analyzers.measurements]
+
+    [[analyzers.representative_findings]]
+    message = """Allocation of Vector{QUBOConstraints.Codebook} in ./boot.jl:649\n  | return $(Expr(:new, :self, :(memoryref(mem)), :((m,))))\n\nStacktrace:\n [1] Array\n   @ ./boot.jl:649 [inlined]\n [2] getindex\n   @ ./array.jl:436 [inlined]\n [3] QUBOComponent\n"""
+    rule = "allocation.potential"
+
+        [analyzers.representative_findings.location]
+        file = "./boot.jl"
+        line = 649
+[[analyzers]]
+analysis_scope = "static operation specialization; tool exception-path defaults; not a universal allocation guarantee"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "numeric_energy_int"
+status = "complete"
+summary = ""
+tool = "alloccheck"
+tool_version = "0.2.6"
+
+    [analyzers.measurements]
+[[analyzers]]
+analysis_scope = "first complete scenario lifecycle in diagnostic process"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "construct_float_128"
+status = "complete"
+summary = ""
+tool = "snoopcompile"
+tool_version = "3.2.9"
+
+    [analyzers.measurements]
+    inference_seconds = 0.033332645893096924
+
+    [[analyzers.representative_findings]]
+    message = "InferenceTimingNode: 0.000014/0.033333 on Base.Compiler.Timings.ROOT() with 4 direct children"
+    rule = "compilation.inference"
+
+        [analyzers.representative_findings.location]
+        file = ""
+        line = 0
+[[analyzers]]
+analysis_scope = "first complete scenario lifecycle in diagnostic process"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "construct_exact_128"
+status = "complete"
+summary = ""
+tool = "snoopcompile"
+tool_version = "3.2.9"
+
+    [analyzers.measurements]
+    inference_seconds = 0.03223574161529541
+
+    [[analyzers.representative_findings]]
+    message = "InferenceTimingNode: 0.000014/0.032236 on Base.Compiler.Timings.ROOT() with 4 direct children"
+    rule = "compilation.inference"
+
+        [analyzers.representative_findings.location]
+        file = ""
+        line = 0
+[[analyzers]]
+analysis_scope = "first complete scenario lifecycle in diagnostic process"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "numeric_energy_int"
+status = "complete"
+summary = ""
+tool = "snoopcompile"
+tool_version = "3.2.9"
+
+    [analyzers.measurements]
+    inference_seconds = 1.537799835205078e-5
+
+    [[analyzers.representative_findings]]
+    message = "InferenceTimingNode: 0.000014/0.000015 on Base.Compiler.Timings.ROOT() with 0 direct children"
+    rule = "compilation.inference"
+
+        [analyzers.representative_findings.location]
+        file = ""
+        line = 0
+[[analyzers]]
+analysis_scope = "fresh process; source loading; full lifecycle including preparation and verification"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "construct_float_128"
+status = "complete"
+summary = ""
+tool = "latency"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    first_case_seconds = 1.101781997
+    load_seconds = 0.709144411
+    warm_case_seconds = 7.5364e-5
+[[analyzers]]
+analysis_scope = "fresh process; source loading; full lifecycle including preparation and verification"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "construct_exact_128"
+status = "complete"
+summary = ""
+tool = "latency"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    first_case_seconds = 1.149009311
+    load_seconds = 0.68608957
+    warm_case_seconds = 0.000394101
+[[analyzers]]
+analysis_scope = "fresh process; source loading; full lifecycle including preparation and verification"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "numeric_energy_int"
+status = "complete"
+summary = ""
+tool = "latency"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    first_case_seconds = 0.134661469
+    load_seconds = 1.625969726
+    warm_case_seconds = 0.001408695
+[[analyzers]]
+analysis_scope = "warmed operation and synchronization; fresh state; preparation, verification and cleanup excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "construct_float_128"
+status = "complete"
+summary = "3 operations: 0.0 ms in GC, 263592 allocated bytes in total. Diagnostic counters are process-wide."
+tool = "gc"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 87864
+        minimum = 87864
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 5.5469e-5
+        minimum = 2.968e-5
+[[analyzers]]
+analysis_scope = "warmed operation and synchronization; fresh state; preparation, verification and cleanup excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "construct_exact_128"
+status = "complete"
+summary = "3 operations: 0.0 ms in GC, 310560 allocated bytes in total. Diagnostic counters are process-wide."
+tool = "gc"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 105568
+        minimum = 102496
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.000108814
+        minimum = 5.3971e-5
+[[analyzers]]
+analysis_scope = "warmed operation and synchronization; fresh state; preparation, verification and cleanup excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "numeric_energy_int"
+status = "complete"
+summary = "3 operations: 0.0 ms in GC, 0 allocated bytes in total. Diagnostic counters are process-wide."
+tool = "gc"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.001419183
+        minimum = 0.001416719
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "construct_float_128"
+status = "complete"
+summary = "3 operations: reachable state changed by 0 to 0 bytes. Growth may be intended output or a cache; it does not establish a leak."
+tool = "memory"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.state_after_bytes]
+        maximum = 23480
+        minimum = 23480
+
+        [analyzers.measurements.state_and_result_bytes]
+        maximum = 33939
+        minimum = 33939
+
+        [analyzers.measurements.state_before_bytes]
+        maximum = 23480
+        minimum = 23480
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "construct_exact_128"
+status = "complete"
+summary = "3 operations: reachable state changed by 0 to 0 bytes. Growth may be intended output or a cache; it does not establish a leak."
+tool = "memory"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.state_after_bytes]
+        maximum = 35720
+        minimum = 35720
+
+        [analyzers.measurements.state_and_result_bytes]
+        maximum = 53755
+        minimum = 53755
+
+        [analyzers.measurements.state_before_bytes]
+        maximum = 35720
+        minimum = 35720
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "numeric_energy_int"
+status = "complete"
+summary = "3 operations: reachable state changed by 0 to 0 bytes. Growth may be intended output or a cache; it does not establish a leak."
+tool = "memory"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.state_after_bytes]
+        maximum = 88347
+        minimum = 88347
+
+        [analyzers.measurements.state_and_result_bytes]
+        maximum = 88355
+        minimum = 88355
+
+        [analyzers.measurements.state_before_bytes]
+        maximum = 88347
+        minimum = 88347
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "construct_float_128"
+status = "complete"
+summary = "3 operations: 0 observed lock conflicts. Counts do not measure waiting duration."
+tool = "locks"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 87864
+        minimum = 87864
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 6.1227e-5
+        minimum = 3.1528e-5
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "construct_exact_128"
+status = "complete"
+summary = "3 operations: 0 observed lock conflicts. Counts do not measure waiting duration."
+tool = "locks"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 105584
+        minimum = 102480
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.000107224
+        minimum = 5.5635e-5
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "numeric_energy_int"
+status = "complete"
+summary = "3 operations: 0 observed lock conflicts. Counts do not measure waiting duration."
+tool = "locks"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.003967115
+        minimum = 0.003481212
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "not_checked"
+direct_target_locations = 0
+finding_count = 0
+quality = "passed"
+representative_findings = []
+scenario = "package"
+status = "complete"
+summary = ""
+tool = "aqua"
+tool_version = "0.8.18"
+
+    [analyzers.measurements]
+[[analyzers]]
+analysis_scope = "operation specialized for prepared state type; synchronization excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_sparse_delta"
+status = "complete"
+summary = ""
+tool = "jet"
+tool_version = "0.12.3"
+
+    [analyzers.measurements]
+[[analyzers]]
+analysis_scope = "operation specialized for prepared state type; synchronization excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_scope_absolute"
+status = "complete"
+summary = ""
+tool = "jet"
+tool_version = "0.12.3"
+
+    [analyzers.measurements]
+[[analyzers]]
+analysis_scope = "operation specialized for prepared state type; synchronization excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_scope_conditional"
+status = "complete"
+summary = ""
+tool = "jet"
+tool_version = "0.12.3"
+
+    [analyzers.measurements]
+[[analyzers]]
+analysis_scope = "operation specialized for prepared state type; synchronization excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+summary = ""
+tool = "jet"
+tool_version = "0.12.3"
+
+    [analyzers.measurements]
+[[analyzers]]
+analysis_scope = "operation specialized for prepared state type; synchronization excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_dense_delta"
+status = "complete"
+summary = ""
+tool = "jet"
+tool_version = "0.12.3"
+
+    [analyzers.measurements]
+[[analyzers]]
+analysis_scope = "static operation specialization; tool exception-path defaults; not a universal allocation guarantee"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "value_pair_sparse_delta"
+status = "complete"
+summary = ""
+tool = "alloccheck"
+tool_version = "0.2.6"
+
+    [analyzers.measurements]
+
+    [[analyzers.representative_findings]]
+    message = """Allocation of Memory{Int64} in ./boot.jl:588\n  | (self::Type{GenericMemory{kind,T,addrspace}})(::UndefInitializer, m::Int) where {T,addrspace,kind} = memorynew(self, m)\n\nStacktrace:\n [1] GenericMemory\n   @ ./boot.jl:588 [inlined]\n [2] array"""
+    rule = "allocation.potential"
+
+        [analyzers.representative_findings.location]
+        file = "./boot.jl"
+        line = 588
+[[analyzers]]
+analysis_scope = "static operation specialization; tool exception-path defaults; not a universal allocation guarantee"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "value_pair_scope_absolute"
+status = "complete"
+summary = ""
+tool = "alloccheck"
+tool_version = "0.2.6"
+
+    [analyzers.measurements]
+
+    [[analyzers.representative_findings]]
+    message = """Allocation of Memory{Int64} in ./boot.jl:588\n  | (self::Type{GenericMemory{kind,T,addrspace}})(::UndefInitializer, m::Int) where {T,addrspace,kind} = memorynew(self, m)\n\nStacktrace:\n [1] GenericMemory\n   @ ./boot.jl:588 [inlined]\n [2] array"""
+    rule = "allocation.potential"
+
+        [analyzers.representative_findings.location]
+        file = "./boot.jl"
+        line = 588
+[[analyzers]]
+analysis_scope = "static operation specialization; tool exception-path defaults; not a universal allocation guarantee"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "value_pair_scope_conditional"
+status = "complete"
+summary = ""
+tool = "alloccheck"
+tool_version = "0.2.6"
+
+    [analyzers.measurements]
+
+    [[analyzers.representative_findings]]
+    message = """Allocation of Memory{Int64} in ./boot.jl:588\n  | (self::Type{GenericMemory{kind,T,addrspace}})(::UndefInitializer, m::Int) where {T,addrspace,kind} = memorynew(self, m)\n\nStacktrace:\n [1] GenericMemory\n   @ ./boot.jl:588 [inlined]\n [2] array"""
+    rule = "allocation.potential"
+
+        [analyzers.representative_findings.location]
+        file = "./boot.jl"
+        line = 588
+[[analyzers]]
+analysis_scope = "static operation specialization; tool exception-path defaults; not a universal allocation guarantee"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+summary = ""
+tool = "alloccheck"
+tool_version = "0.2.6"
+
+    [analyzers.measurements]
+
+    [[analyzers.representative_findings]]
+    message = """Allocation of Memory{Int64} in ./boot.jl:588\n  | (self::Type{GenericMemory{kind,T,addrspace}})(::UndefInitializer, m::Int) where {T,addrspace,kind} = memorynew(self, m)\n\nStacktrace:\n [1] GenericMemory\n   @ ./boot.jl:588 [inlined]\n [2] array"""
+    rule = "allocation.potential"
+
+        [analyzers.representative_findings.location]
+        file = "./boot.jl"
+        line = 588
+[[analyzers]]
+analysis_scope = "static operation specialization; tool exception-path defaults; not a universal allocation guarantee"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "value_pair_dense_delta"
+status = "complete"
+summary = ""
+tool = "alloccheck"
+tool_version = "0.2.6"
+
+    [analyzers.measurements]
+
+    [[analyzers.representative_findings]]
+    message = """Allocation of Memory{Int64} in ./boot.jl:588\n  | (self::Type{GenericMemory{kind,T,addrspace}})(::UndefInitializer, m::Int) where {T,addrspace,kind} = memorynew(self, m)\n\nStacktrace:\n [1] GenericMemory\n   @ ./boot.jl:588 [inlined]\n [2] array"""
+    rule = "allocation.potential"
+
+        [analyzers.representative_findings.location]
+        file = "./boot.jl"
+        line = 588
+[[analyzers]]
+analysis_scope = "first complete scenario lifecycle in diagnostic process"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "value_pair_sparse_delta"
+status = "complete"
+summary = ""
+tool = "snoopcompile"
+tool_version = "3.2.9"
+
+    [analyzers.measurements]
+    inference_seconds = 1.537799835205078e-5
+
+    [[analyzers.representative_findings]]
+    message = "InferenceTimingNode: 0.000014/0.000015 on Base.Compiler.Timings.ROOT() with 0 direct children"
+    rule = "compilation.inference"
+
+        [analyzers.representative_findings.location]
+        file = ""
+        line = 0
+[[analyzers]]
+analysis_scope = "first complete scenario lifecycle in diagnostic process"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "value_pair_scope_absolute"
+status = "complete"
+summary = ""
+tool = "snoopcompile"
+tool_version = "3.2.9"
+
+    [analyzers.measurements]
+    inference_seconds = 1.537799835205078e-5
+
+    [[analyzers.representative_findings]]
+    message = "InferenceTimingNode: 0.000014/0.000015 on Base.Compiler.Timings.ROOT() with 0 direct children"
+    rule = "compilation.inference"
+
+        [analyzers.representative_findings.location]
+        file = ""
+        line = 0
+[[analyzers]]
+analysis_scope = "first complete scenario lifecycle in diagnostic process"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "value_pair_scope_conditional"
+status = "complete"
+summary = ""
+tool = "snoopcompile"
+tool_version = "3.2.9"
+
+    [analyzers.measurements]
+    inference_seconds = 1.537799835205078e-5
+
+    [[analyzers.representative_findings]]
+    message = "InferenceTimingNode: 0.000014/0.000015 on Base.Compiler.Timings.ROOT() with 0 direct children"
+    rule = "compilation.inference"
+
+        [analyzers.representative_findings.location]
+        file = ""
+        line = 0
+[[analyzers]]
+analysis_scope = "first complete scenario lifecycle in diagnostic process"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+summary = ""
+tool = "snoopcompile"
+tool_version = "3.2.9"
+
+    [analyzers.measurements]
+    inference_seconds = 1.537799835205078e-5
+
+    [[analyzers.representative_findings]]
+    message = "InferenceTimingNode: 0.000014/0.000015 on Base.Compiler.Timings.ROOT() with 0 direct children"
+    rule = "compilation.inference"
+
+        [analyzers.representative_findings.location]
+        file = ""
+        line = 0
+[[analyzers]]
+analysis_scope = "first complete scenario lifecycle in diagnostic process"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 1
+quality = "not_checked"
+scenario = "value_pair_dense_delta"
+status = "complete"
+summary = ""
+tool = "snoopcompile"
+tool_version = "3.2.9"
+
+    [analyzers.measurements]
+    inference_seconds = 1.537799835205078e-5
+
+    [[analyzers.representative_findings]]
+    message = "InferenceTimingNode: 0.000014/0.000015 on Base.Compiler.Timings.ROOT() with 0 direct children"
+    rule = "compilation.inference"
+
+        [analyzers.representative_findings.location]
+        file = ""
+        line = 0
+[[analyzers]]
+analysis_scope = "fresh process; source loading; full lifecycle including preparation and verification"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_sparse_delta"
+status = "complete"
+summary = ""
+tool = "latency"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    first_case_seconds = 0.405711216
+    load_seconds = 0.981771964
+    warm_case_seconds = 0.000443968
+[[analyzers]]
+analysis_scope = "fresh process; source loading; full lifecycle including preparation and verification"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_scope_absolute"
+status = "complete"
+summary = ""
+tool = "latency"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    first_case_seconds = 0.460496602
+    load_seconds = 0.974453717
+    warm_case_seconds = 0.003328509
+[[analyzers]]
+analysis_scope = "fresh process; source loading; full lifecycle including preparation and verification"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_scope_conditional"
+status = "complete"
+summary = ""
+tool = "latency"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    first_case_seconds = 0.531791609
+    load_seconds = 0.964559939
+    warm_case_seconds = 0.021853271
+[[analyzers]]
+analysis_scope = "fresh process; source loading; full lifecycle including preparation and verification"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+summary = ""
+tool = "latency"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    first_case_seconds = 0.628474923
+    load_seconds = 1.000463953
+    warm_case_seconds = 0.039331692
+[[analyzers]]
+analysis_scope = "fresh process; source loading; full lifecycle including preparation and verification"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_dense_delta"
+status = "complete"
+summary = ""
+tool = "latency"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    first_case_seconds = 0.416766399
+    load_seconds = 0.9908012
+    warm_case_seconds = 0.009464945
+[[analyzers]]
+analysis_scope = "warmed operation and synchronization; fresh state; preparation, verification and cleanup excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_sparse_delta"
+status = "complete"
+summary = "3 operations: 0.0 ms in GC, 0 allocated bytes in total. Diagnostic counters are process-wide."
+tool = "gc"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.000325534
+        minimum = 0.000316699
+[[analyzers]]
+analysis_scope = "warmed operation and synchronization; fresh state; preparation, verification and cleanup excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_scope_absolute"
+status = "complete"
+summary = "3 operations: 0.0 ms in GC, 0 allocated bytes in total. Diagnostic counters are process-wide."
+tool = "gc"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.00330527
+        minimum = 0.003244015
+[[analyzers]]
+analysis_scope = "warmed operation and synchronization; fresh state; preparation, verification and cleanup excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_scope_conditional"
+status = "complete"
+summary = "3 operations: 0.0 ms in GC, 0 allocated bytes in total. Diagnostic counters are process-wide."
+tool = "gc"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.021549163
+        minimum = 0.021446234
+[[analyzers]]
+analysis_scope = "warmed operation and synchronization; fresh state; preparation, verification and cleanup excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+summary = "3 operations: 0.0 ms in GC, 0 allocated bytes in total. Diagnostic counters are process-wide."
+tool = "gc"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.039736262
+        minimum = 0.039321918
+[[analyzers]]
+analysis_scope = "warmed operation and synchronization; fresh state; preparation, verification and cleanup excluded"
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_dense_delta"
+status = "complete"
+summary = "3 operations: 0.0 ms in GC, 0 allocated bytes in total. Diagnostic counters are process-wide."
+tool = "gc"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.009343527
+        minimum = 0.009221911
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_sparse_delta"
+status = "complete"
+summary = "3 operations: reachable state changed by 0 to 0 bytes. Growth may be intended output or a cache; it does not establish a leak."
+tool = "memory"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.state_after_bytes]
+        maximum = 1006220
+        minimum = 1006220
+
+        [analyzers.measurements.state_and_result_bytes]
+        maximum = 1006228
+        minimum = 1006228
+
+        [analyzers.measurements.state_before_bytes]
+        maximum = 1006220
+        minimum = 1006220
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_scope_absolute"
+status = "complete"
+summary = "3 operations: reachable state changed by 0 to 0 bytes. Growth may be intended output or a cache; it does not establish a leak."
+tool = "memory"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.state_after_bytes]
+        maximum = 1006220
+        minimum = 1006220
+
+        [analyzers.measurements.state_and_result_bytes]
+        maximum = 1006228
+        minimum = 1006228
+
+        [analyzers.measurements.state_before_bytes]
+        maximum = 1006220
+        minimum = 1006220
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_scope_conditional"
+status = "complete"
+summary = "3 operations: reachable state changed by 0 to 0 bytes. Growth may be intended output or a cache; it does not establish a leak."
+tool = "memory"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.state_after_bytes]
+        maximum = 1006220
+        minimum = 1006220
+
+        [analyzers.measurements.state_and_result_bytes]
+        maximum = 1006228
+        minimum = 1006228
+
+        [analyzers.measurements.state_before_bytes]
+        maximum = 1006220
+        minimum = 1006220
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+summary = "3 operations: reachable state changed by 0 to 0 bytes. Growth may be intended output or a cache; it does not establish a leak."
+tool = "memory"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.state_after_bytes]
+        maximum = 1006220
+        minimum = 1006220
+
+        [analyzers.measurements.state_and_result_bytes]
+        maximum = 1006228
+        minimum = 1006228
+
+        [analyzers.measurements.state_before_bytes]
+        maximum = 1006220
+        minimum = 1006220
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_dense_delta"
+status = "complete"
+summary = "3 operations: reachable state changed by 0 to 0 bytes. Growth may be intended output or a cache; it does not establish a leak."
+tool = "memory"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.state_after_bytes]
+        maximum = 1008236
+        minimum = 1008236
+
+        [analyzers.measurements.state_and_result_bytes]
+        maximum = 1008244
+        minimum = 1008244
+
+        [analyzers.measurements.state_before_bytes]
+        maximum = 1008236
+        minimum = 1008236
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_sparse_delta"
+status = "complete"
+summary = "3 operations: 0 observed lock conflicts. Counts do not measure waiting duration."
+tool = "locks"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.000318431
+        minimum = 0.000311579
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_scope_absolute"
+status = "complete"
+summary = "3 operations: 0 observed lock conflicts. Counts do not measure waiting duration."
+tool = "locks"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.003525759
+        minimum = 0.003366318
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_scope_conditional"
+status = "complete"
+summary = "3 operations: 0 observed lock conflicts. Counts do not measure waiting duration."
+tool = "locks"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.02158218
+        minimum = 0.021452259
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+summary = "3 operations: 0 observed lock conflicts. Counts do not measure waiting duration."
+tool = "locks"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.040481715
+        minimum = 0.040112177
+[[analyzers]]
+analysis_scope = ""
+artifacts = []
+correctness = "passed"
+direct_target_locations = 0
+finding_count = 0
+quality = "not_checked"
+representative_findings = []
+scenario = "value_pair_dense_delta"
+status = "complete"
+summary = "3 operations: 0 observed lock conflicts. Counts do not measure waiting duration."
+tool = "locks"
+tool_version = "builtin"
+
+    [analyzers.measurements]
+    sample_count = 3
+
+        [analyzers.measurements.allocated_bytes]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.gc_seconds]
+        maximum = 0.0
+        minimum = 0.0
+
+        [analyzers.measurements.lock_conflicts]
+        maximum = 0
+        minimum = 0
+
+        [analyzers.measurements.operation_seconds]
+        maximum = 0.009887561
+        minimum = 0.00974576
+
+[aqua]
+baseline = "failed: missing LinearAlgebra and extras bounds"
+candidate = "default Aqua.test_all passed"
+compatibility_repairs = ["LinearAlgebra 1", "Random 1", "SHA 0.7 or 1", "Aqua 0.8", "DataFrames 1", "Flux 0.14.25 series", "PrettyTables 3", "Test 1", "TestItemRunner 1.3"]
+flux_support_reference = "https://fluxml.ai/Flux.jl/v0.14.15/training/training/"
+version = "0.8.18"
+
+[[collectors]]
+collector = "benchmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "construct_float_128"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 87864.0
+    median = 87864.0
+    minimum = 87864.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 105.0
+    median = 105.0
+    minimum = 105.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 6.1557e-5
+    median = 3.8568e-5
+    minimum = 2.9067e-5
+[[collectors]]
+collector = "chairmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "construct_float_128"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 87864.0
+    median = 87864.0
+    minimum = 87864.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 105.0
+    median = 105.0
+    minimum = 105.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 5.3305000000000005e-5
+    median = 3.1870000000000005e-5
+    minimum = 2.9276000000000002e-5
+[[collectors]]
+collector = "profile"
+correctness = "passed"
+cpu_samples = 0
+scenario = "construct_float_128"
+status = "complete"
+[[collectors]]
+collector = "profile_alloc"
+correctness = "passed"
+cpu_samples = 525
+scenario = "construct_float_128"
+status = "complete"
+
+    [collectors.allocation_profile]
+    profile_evaluations = 5
+    sample_rate = 1.0
+    sampled_allocations = 525
+    status = "complete"
+    total_allocations = 105
+    total_bytes = 87864
+    total_measurement_evaluations = 2
+
+    [collectors."julia.alloc.bytes"]
+    count = 1
+    maximum = 87864.0
+    median = 87864.0
+    minimum = 87864.0
+
+    [collectors."julia.alloc.count"]
+    count = 1
+    maximum = 105.0
+    median = 105.0
+    minimum = 105.0
+[[collectors]]
+collector = "benchmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "construct_exact_128"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 102368.0
+    median = 102368.0
+    minimum = 102368.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 619.0
+    median = 619.0
+    minimum = 619.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.00011935
+    median = 6.8576e-5
+    minimum = 5.5126e-5
+[[collectors]]
+collector = "chairmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "construct_exact_128"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 102400.0
+    median = 102320.0
+    minimum = 102288.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 619.0
+    median = 619.0
+    minimum = 619.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 8.5468e-5
+    median = 5.3218000000000004e-5
+    minimum = 4.9810000000000006e-5
+[[collectors]]
+collector = "profile"
+correctness = "passed"
+cpu_samples = 0
+scenario = "construct_exact_128"
+status = "complete"
+[[collectors]]
+collector = "profile_alloc"
+correctness = "passed"
+cpu_samples = 1810
+scenario = "construct_exact_128"
+status = "complete"
+
+    [collectors.allocation_profile]
+    profile_evaluations = 5
+    sample_rate = 1.0
+    sampled_allocations = 1810
+    status = "complete"
+    total_allocations = 619
+    total_bytes = 102432
+    total_measurement_evaluations = 2
+
+    [collectors."julia.alloc.bytes"]
+    count = 1
+    maximum = 102432.0
+    median = 102432.0
+    minimum = 102432.0
+
+    [collectors."julia.alloc.count"]
+    count = 1
+    maximum = 619.0
+    median = 619.0
+    minimum = 619.0
+[[collectors]]
+collector = "benchmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "numeric_energy_int"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.004494397
+    median = 0.004459967
+    minimum = 0.00145595
+[[collectors]]
+collector = "chairmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "numeric_energy_int"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.00152615
+    median = 0.0015038130000000001
+    minimum = 0.001502195
+[[collectors]]
+collector = "profile"
+correctness = "passed"
+cpu_samples = 12
+scenario = "numeric_energy_int"
+status = "complete"
+[[collectors]]
+collector = "profile_alloc"
+correctness = "passed"
+cpu_samples = 0
+scenario = "numeric_energy_int"
+status = "complete"
+
+    [collectors.allocation_profile]
+    profile_evaluations = 5
+    sample_rate = 1.0
+    sampled_allocations = 0
+    status = "zero_allocations"
+    total_allocations = 0
+    total_bytes = 0
+    total_measurement_evaluations = 2
+
+    [collectors."julia.alloc.bytes"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+[[collectors]]
+collector = "benchmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "numeric_energy_float"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.001991574
+    median = 0.001951685
+    minimum = 0.001944679
+[[collectors]]
+collector = "chairmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "numeric_energy_float"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.0020299800000000002
+    median = 0.001984673
+    minimum = 0.001979977
+[[collectors]]
+collector = "profile"
+correctness = "passed"
+cpu_samples = 12
+scenario = "numeric_energy_float"
+status = "complete"
+[[collectors]]
+collector = "profile_alloc"
+correctness = "passed"
+cpu_samples = 0
+scenario = "numeric_energy_float"
+status = "complete"
+
+    [collectors.allocation_profile]
+    profile_evaluations = 5
+    sample_rate = 1.0
+    sampled_allocations = 0
+    status = "zero_allocations"
+    total_allocations = 0
+    total_bytes = 0
+    total_measurement_evaluations = 2
+
+    [collectors."julia.alloc.bytes"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+[[collectors]]
+collector = "benchmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_scan_delta"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.005191755
+    median = 0.005082456
+    minimum = 0.005039548
+[[collectors]]
+collector = "chairmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_scan_delta"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.0052375930000000005
+    median = 0.00510855
+    minimum = 0.005024321
+[[collectors]]
+collector = "profile"
+correctness = "passed"
+cpu_samples = 69
+scenario = "value_pair_scan_delta"
+status = "complete"
+[[collectors]]
+collector = "profile_alloc"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_scan_delta"
+status = "complete"
+
+    [collectors.allocation_profile]
+    profile_evaluations = 5
+    sample_rate = 1.0
+    sampled_allocations = 0
+    status = "zero_allocations"
+    total_allocations = 0
+    total_bytes = 0
+    total_measurement_evaluations = 2
+
+    [collectors."julia.alloc.bytes"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+[[collectors]]
+collector = "benchmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_sparse_delta"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.000444712
+    median = 0.000313849
+    minimum = 0.000312827
+[[collectors]]
+collector = "chairmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_sparse_delta"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.000308307
+    median = 0.00030586700000000003
+    minimum = 0.000301604
+[[collectors]]
+collector = "profile"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_sparse_delta"
+status = "complete"
+[[collectors]]
+collector = "profile_alloc"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_sparse_delta"
+status = "complete"
+
+    [collectors.allocation_profile]
+    profile_evaluations = 5
+    sample_rate = 1.0
+    sampled_allocations = 0
+    status = "zero_allocations"
+    total_allocations = 0
+    total_bytes = 0
+    total_measurement_evaluations = 2
+
+    [collectors."julia.alloc.bytes"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+[[collectors]]
+collector = "benchmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_scope_absolute"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.003384943
+    median = 0.003347998
+    minimum = 0.003330704
+[[collectors]]
+collector = "chairmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_scope_absolute"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.0034119650000000003
+    median = 0.00336168
+    minimum = 0.003283746
+[[collectors]]
+collector = "profile"
+correctness = "passed"
+cpu_samples = 42
+scenario = "value_pair_scope_absolute"
+status = "complete"
+[[collectors]]
+collector = "profile_alloc"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_scope_absolute"
+status = "complete"
+
+    [collectors.allocation_profile]
+    profile_evaluations = 5
+    sample_rate = 1.0
+    sampled_allocations = 0
+    status = "zero_allocations"
+    total_allocations = 0
+    total_bytes = 0
+    total_measurement_evaluations = 2
+
+    [collectors."julia.alloc.bytes"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+[[collectors]]
+collector = "benchmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_scope_conditional"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.025299832
+    median = 0.022429664
+    minimum = 0.021712866
+[[collectors]]
+collector = "chairmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_scope_conditional"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.038482847
+    median = 0.022305114
+    minimum = 0.02165287
+[[collectors]]
+collector = "profile"
+correctness = "passed"
+cpu_samples = 312
+scenario = "value_pair_scope_conditional"
+status = "complete"
+[[collectors]]
+collector = "profile_alloc"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_scope_conditional"
+status = "complete"
+
+    [collectors.allocation_profile]
+    profile_evaluations = 5
+    sample_rate = 1.0
+    sampled_allocations = 0
+    status = "zero_allocations"
+    total_allocations = 0
+    total_bytes = 0
+    total_measurement_evaluations = 2
+
+    [collectors."julia.alloc.bytes"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+[[collectors]]
+collector = "benchmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.039545605
+    median = 0.039203551
+    minimum = 0.039072748
+[[collectors]]
+collector = "chairmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.03973754
+    median = 0.039413168000000005
+    minimum = 0.039069730000000004
+[[collectors]]
+collector = "profile"
+correctness = "passed"
+cpu_samples = 564
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+[[collectors]]
+collector = "profile_alloc"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_proposal_conditional"
+status = "complete"
+
+    [collectors.allocation_profile]
+    profile_evaluations = 5
+    sample_rate = 1.0
+    sampled_allocations = 0
+    status = "zero_allocations"
+    total_allocations = 0
+    total_bytes = 0
+    total_measurement_evaluations = 2
+
+    [collectors."julia.alloc.bytes"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+[[collectors]]
+collector = "benchmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_dense_delta"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.009420868
+    median = 0.009213543
+    minimum = 0.009067978
+[[collectors]]
+collector = "chairmark"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_dense_delta"
+status = "complete"
+
+    [collectors."julia.alloc.bytes"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 5
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.wall.time"]
+    count = 5
+    maximum = 0.009253872
+    median = 0.009181707
+    minimum = 0.009157638000000001
+[[collectors]]
+collector = "profile"
+correctness = "passed"
+cpu_samples = 129
+scenario = "value_pair_dense_delta"
+status = "complete"
+[[collectors]]
+collector = "profile_alloc"
+correctness = "passed"
+cpu_samples = 0
+scenario = "value_pair_dense_delta"
+status = "complete"
+
+    [collectors.allocation_profile]
+    profile_evaluations = 5
+    sample_rate = 1.0
+    sampled_allocations = 0
+    status = "zero_allocations"
+    total_allocations = 0
+    total_bytes = 0
+    total_measurement_evaluations = 2
+
+    [collectors."julia.alloc.bytes"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+    [collectors."julia.alloc.count"]
+    count = 1
+    maximum = 0.0
+    median = 0.0
+    minimum = 0.0
+
+[[construction_baseline.construction]]
+allocations = 106
+bits = 32
+bytes = 27872
+coefficient_type = "float"
+median_seconds = 6.852000000000001e-6
+oracle = "passed"
+[[construction_baseline.construction]]
+allocations = 134
+bits = 128
+bytes = 100648
+coefficient_type = "float"
+median_seconds = 2.7446e-5
+oracle = "passed"
+[[construction_baseline.construction]]
+allocations = 176
+bits = 512
+bytes = 444232
+coefficient_type = "float"
+median_seconds = 0.000130881
+oracle = "passed"
+[[construction_baseline.construction]]
+allocations = 236
+bits = 32
+bytes = 31512
+coefficient_type = "exact"
+median_seconds = 1.2094000000000001e-5
+oracle = "passed"
+[[construction_baseline.construction]]
+allocations = 648
+bits = 128
+bytes = 115296
+coefficient_type = "exact"
+median_seconds = 5.0589000000000006e-5
+oracle = "passed"
+[[construction_baseline.construction]]
+allocations = 2226
+bits = 512
+bytes = 501760
+coefficient_type = "exact"
+median_seconds = 0.00022904900000000002
+oracle = "passed"
+
+[[construction_candidate.construction]]
+allocations = 80
+bits = 32
+bytes = 24256
+coefficient_type = "float"
+median_seconds = 6.54e-6
+oracle = "passed"
+[[construction_candidate.construction]]
+allocations = 105
+bits = 128
+bytes = 87864
+coefficient_type = "float"
+median_seconds = 2.7256e-5
+oracle = "passed"
+[[construction_candidate.construction]]
+allocations = 134
+bits = 512
+bytes = 397000
+coefficient_type = "float"
+median_seconds = 0.00014703100000000002
+oracle = "passed"
+[[construction_candidate.construction]]
+allocations = 210
+bits = 32
+bytes = 27896
+coefficient_type = "exact"
+median_seconds = 1.149e-5
+oracle = "passed"
+[[construction_candidate.construction]]
+allocations = 619
+bits = 128
+bytes = 102512
+coefficient_type = "exact"
+median_seconds = 4.5937000000000004e-5
+oracle = "passed"
+[[construction_candidate.construction]]
+allocations = 2184
+bits = 512
+bytes = 454816
+coefficient_type = "exact"
+median_seconds = 0.00021754800000000003
+oracle = "passed"
+
+[guidance_reference_comparisons]
+candidate_scope = "Earlier sparse-only candidate before reserved scope buffers and the adaptive full-scan fallback; retained to document matched work and the reason for the final fallback. Final candidate measurements are the native collector records below."
+compatibility_assertions = 1800
+reference_source_sha256 = "60e9e585bfebb6b9d048fc9d742c471193c4813452fd2ad31193b3475e860c07"
+
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 0
+    bytes = 0
+    depth = 4
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.0050491170000000005
+    mode = "conditional"
+    moved_variables = 2
+    operation = "delta"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862324
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 0
+    bytes = 0
+    depth = 4
+    implementation = "candidate_package"
+    median_seconds = 0.0003236475
+    mode = "conditional"
+    moved_variables = 2
+    operation = "delta"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002900
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 0
+    bytes = 0
+    depth = 4
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.0052485875000000005
+    mode = "conditional"
+    moved_variables = 8
+    operation = "delta"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862324
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 0
+    bytes = 0
+    depth = 4
+    implementation = "candidate_package"
+    median_seconds = 0.001567068
+    mode = "conditional"
+    moved_variables = 8
+    operation = "delta"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002900
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 0
+    bytes = 0
+    depth = 4
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.0054379205
+    mode = "conditional"
+    moved_variables = 32
+    operation = "delta"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862324
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 0
+    bytes = 0
+    depth = 4
+    implementation = "candidate_package"
+    median_seconds = 0.0071266275
+    mode = "conditional"
+    moved_variables = 32
+    operation = "delta"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002900
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 0
+    bytes = 0
+    depth = 4
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.008536382500000002
+    mode = "conditional"
+    moved_variables = 128
+    operation = "delta"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862324
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 0
+    bytes = 0
+    depth = 4
+    implementation = "candidate_package"
+    median_seconds = 0.034383962500000004
+    mode = "conditional"
+    moved_variables = 128
+    operation = "delta"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002900
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 1
+    bytes = 48
+    depth = 2
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.0313803215
+    mode = "absolute"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862364
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 1
+    bytes = 48
+    depth = 2
+    implementation = "candidate_package"
+    median_seconds = 0.0020358620000000003
+    mode = "absolute"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002940
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 144
+    depth = 4
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.0317802135
+    mode = "absolute"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862412
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 144
+    depth = 4
+    implementation = "candidate_package"
+    median_seconds = 0.0032179770000000003
+    mode = "absolute"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002988
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 144
+    depth = 8
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.034199205
+    mode = "absolute"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862412
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 144
+    depth = 8
+    implementation = "candidate_package"
+    median_seconds = 0.005658352
+    mode = "absolute"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002988
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 1
+    bytes = 48
+    depth = 2
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.043636375000000005
+    mode = "conditional"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862364
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 1
+    bytes = 48
+    depth = 2
+    implementation = "candidate_package"
+    median_seconds = 0.016494406
+    mode = "conditional"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002940
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 144
+    depth = 4
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.045198676
+    mode = "conditional"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862412
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 144
+    depth = 4
+    implementation = "candidate_package"
+    median_seconds = 0.018137577000000002
+    mode = "conditional"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002988
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 144
+    depth = 8
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.048518490000000004
+    mode = "conditional"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862412
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 144
+    depth = 8
+    implementation = "candidate_package"
+    median_seconds = 0.021476315500000003
+    mode = "conditional"
+    moved_variables = 2
+    operation = "scope"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002988
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 96
+    depth = 2
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.05280267050000001
+    mode = "absolute"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862388
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 96
+    depth = 2
+    implementation = "candidate_package"
+    median_seconds = 0.019538760500000002
+    mode = "absolute"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002964
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 4
+    bytes = 288
+    depth = 4
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.0545673725
+    mode = "absolute"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862484
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 4
+    bytes = 288
+    depth = 4
+    implementation = "candidate_package"
+    median_seconds = 0.0212584505
+    mode = "absolute"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1003060
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 4
+    bytes = 288
+    depth = 8
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.056995224500000004
+    mode = "absolute"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862484
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 4
+    bytes = 288
+    depth = 8
+    implementation = "candidate_package"
+    median_seconds = 0.023503895
+    mode = "absolute"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1003060
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 96
+    depth = 2
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.06585128300000001
+    mode = "conditional"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862388
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 2
+    bytes = 96
+    depth = 2
+    implementation = "candidate_package"
+    median_seconds = 0.034226532000000004
+    mode = "conditional"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1002964
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 4
+    bytes = 288
+    depth = 4
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.067554422
+    mode = "conditional"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862484
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 4
+    bytes = 288
+    depth = 4
+    implementation = "candidate_package"
+    median_seconds = 0.036053136
+    mode = "conditional"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1003060
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 4
+    bytes = 288
+    depth = 8
+    implementation = "frozen_benchmark_reference"
+    median_seconds = 0.071441509
+    mode = "conditional"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 862484
+    repetitions = 1024
+    variables = 128
+    [[guidance_reference_comparisons.measurements]]
+    allocations = 4
+    bytes = 288
+    depth = 8
+    implementation = "candidate_package"
+    median_seconds = 0.03909544350000001
+    mode = "conditional"
+    moved_variables = 2
+    operation = "proposal"
+    oracle = "passed"
+    reachable_guide_workspace_bytes = 1003060
+    repetitions = 1024
+    variables = 128
+
+[heap]
+correctness = "passed"
+scope = "Redacted whole diagnostic process, not module-only or native memory. Intrusive capture excluded from performance timing; temporary snapshot removed after recording identity."
+status = "complete"
+
+    [[heap.artifacts]]
+    bytes = 229855261
+    kind = "heap_snapshot"
+    redacted = true
+    sha256 = "1b2a04f07b472a09f6bbdb72f05da96f38800ae8010ca1f998dac19de3a6e714"
+
+[integration]
+authority = "Original variable/value bindings are retained. Guidance is a proxy, with ordinary Float64 numerical evaluation, and never substitutes for original validation."
+conversion = "VG.Guide(old.atoms, old.linear, collect(zip(old.left, old.right, old.coefficient)); provenance=old.provenance, source_sha256=old.source_sha256)"
+exports = ["Guide", "Workspace", "refresh!", "energy", "delta!", "scope!", "proposal!", "metadata"]
+minimal_adapter = "In LiLim/src/QUBOGuidance.jl, retain matrix/component imports, file IO and configuration helpers. Replace its existing Guide/Workspace and numerical kernel definitions with aliases to QUBOConstraints.ValuePairGuidance. This preserves helper constructors and caller type annotations; use Workspace(g) per lane."
+namespace = "QUBOConstraints.ValuePairGuidance"
+output_lifetime = "scope! and proposal! return lane-owned buffers reused by the next call; copy only if a caller retains a move across calls."
+
+[[numeric_energy_baseline.measurements]]
+allocations = 0
+bits = 1024
+bytes = 0
+input_type = "boolean"
+median_seconds = 0.001646509
+oracle = "passed"
+repetitions = 1024
+[[numeric_energy_baseline.measurements]]
+allocations = 3072
+bits = 1024
+bytes = 229376
+input_type = "integer"
+median_seconds = 0.0021801335
+oracle = "passed"
+repetitions = 1024
+[[numeric_energy_baseline.measurements]]
+allocations = 3072
+bits = 1024
+bytes = 229376
+input_type = "float"
+median_seconds = 0.0032608255
+oracle = "passed"
+repetitions = 1024
+
+[scenario_source_fingerprints]
+"/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/perf/scenarios.jl" = "cc2cebe3f763be2a9326e34ba6722c5a31854f741481a09d6bb4d5f9ff154b4c"
+
+[snoopcompile_actionable]
+scope = "Separate first-lifecycle probe before the final fallback/buffer adjustments. Inference times include preparation and oracle verification; inclusive frame times overlap and must not be summed."
+
+    [[snoopcompile_actionable.records]]
+    inference_seconds = 2.895291030406952
+    scenario = "construct_float"
+
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.1038360595703125
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/component.jl"
+        inclusive_seconds = 0.2376708984375
+        line = 18
+        method = "MethodInstance for (::QUBOConstraints.var\"#_#47#58\")(::Vector{Tuple{Int64, Float64}}, ::Vector{Tuple{Int64, Int64, Float64}}, ::Int64, ::Vector{QUBOConstraints.Codebook}, ::Dict{QUBOConstraints.BitID, String}, ::String, "
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.00441741943359375
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/component.jl"
+        inclusive_seconds = 0.1485595703125
+        line = 18
+        method = "MethodInstance for Core.kwcall(::@NamedTuple{linear::Vector{Tuple{Int64, Float64}}, quadratic::Vector{Tuple{Int64, Int64, Float64}}, offset::Int64}, ::Type{QUBOConstraints.QUBOComponent{Float64}}, ::Vector{QUBOConstraint"
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.040191650390625
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/component.jl"
+        inclusive_seconds = 0.040313720703125
+        line = 72
+        method = "MethodInstance for QUBOConstraints._energy(::QUBOConstraints.QUBOComponent{Float64}, ::Vector{Bool})"
+    [[snoopcompile_actionable.records]]
+    inference_seconds = 1.331956923007965
+    scenario = "construct_exact"
+
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.10451507568359375
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/component.jl"
+        inclusive_seconds = 0.1531982421875
+        line = 18
+        method = "MethodInstance for (::QUBOConstraints.var\"#_#47#58\")(::Vector{Tuple{Int64, BigInt}}, ::Vector{Tuple{Int64, Int64, BigInt}}, ::Int64, ::Vector{QUBOConstraints.Codebook}, ::Dict{QUBOConstraints.BitID, String}, ::String, ::"
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.0039215087890625
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/component.jl"
+        inclusive_seconds = 0.055267333984375
+        line = 18
+        method = "MethodInstance for Core.kwcall(::@NamedTuple{linear::Vector{Tuple{Int64, BigInt}}, quadratic::Vector{Tuple{Int64, Int64, BigInt}}, offset::Int64}, ::Type{QUBOConstraints.QUBOComponent{BigInt}}, ::Vector{QUBOConstraints.B"
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.013051033020019531
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/component.jl"
+        inclusive_seconds = 0.013134956359863281
+        line = 72
+        method = "MethodInstance for QUBOConstraints._energy(::QUBOConstraints.QUBOComponent{BigInt}, ::Vector{Bool})"
+    [[snoopcompile_actionable.records]]
+    inference_seconds = 1.7664987444877625
+    scenario = "sparse_proposal"
+
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.06723403930664062
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/value_pair_guidance.jl"
+        inclusive_seconds = 0.103179931640625
+        line = 210
+        method = "MethodInstance for QUBOConstraints.ValuePairGuidance.var\"#proposal!#15\"(::String, ::Float64, ::Int64, ::typeof(QUBOConstraints.ValuePairGuidance.proposal!), ::QUBOConstraints.ValuePairGuidance.Workspace, ::QUBOConstraint"
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.0655364990234375
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/value_pair_guidance.jl"
+        inclusive_seconds = 0.07430267333984375
+        line = 166
+        method = "MethodInstance for QUBOConstraints.ValuePairGuidance.var\"#scope!#14\"(::String, ::Float64, ::typeof(QUBOConstraints.ValuePairGuidance.scope!), ::QUBOConstraints.ValuePairGuidance.Workspace, ::QUBOConstraints.ValuePairGuid"
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.046657562255859375
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/value_pair_guidance.jl"
+        inclusive_seconds = 0.0660552978515625
+        line = 118
+        method = "MethodInstance for delta!(::QUBOConstraints.ValuePairGuidance.Workspace, ::QUBOConstraints.ValuePairGuidance.Guide, ::Vector{Int64}, ::Vector{Int64})"
+    [[snoopcompile_actionable.records]]
+    inference_seconds = 0.3448042869567871
+    scenario = "numeric_energy"
+
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.019622802734375
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/component.jl"
+        inclusive_seconds = 0.019623279571533203
+        line = 72
+        method = "MethodInstance for QUBOConstraints._energy(::QUBOConstraints.QUBOComponent{Float64}, ::Vector{Int64})"
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 0.0064067840576171875
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/component.jl"
+        inclusive_seconds = 0.007092475891113281
+        line = 90
+        method = "MethodInstance for energy(::QUBOConstraints.QUBOComponent{Float64}, ::Vector{Int64})"
+        [[snoopcompile_actionable.records.target_frames]]
+        exclusive_seconds = 3.7729740142822266e-5
+        file = "/home/azzaare/.julia/dev/JuliaConstraintsPerfNightQUBO/QUBOConstraints/src/component.jl"
+        inclusive_seconds = 3.8683414459228516e-5
+        line = 92
+        method = "MethodInstance for (::QUBOConstraints.var\"#energy##0#energy##1\")(::Int64)"
+
+[source_hashes]
+"src/QUBOConstraints.jl" = "597278879ba67412bfb4768b58e086f5428a3e9d40e5d0cb73fbd080b072a4f1"
+"src/aggregate_components.jl" = "196f31276c5c68c2367bad8d58e929fcf3da93b28a37ca9f20def825a0ea23dd"
+"src/arithmetic_components.jl" = "bc825adb0b42affdb1bfaeb6e30594b34737515b048479dd38a4772f45134131"
+"src/artifacts.jl" = "f7356af96674382411f8efa3efdf794c2faa533cef2a02b287c750de9840593c"
+"src/atomic_components.jl" = "188242d95757d460d140b8d279feeb4a7c809799f83af5b6062d93701e312776"
+"src/atomic_definedness.jl" = "43c4f1d700df099cfb6532a1a273deb0d9c6fc8598bc5dbe121cae37368e07b0"
+"src/atomic_recipes.jl" = "9a7100beeb0d0b3c30c4cfa1ec73bd212cb482ce84933a40acbf4de0c351e935"
+"src/atomic_search.jl" = "f727c6db4688e4344f74f3d08779c65f3fbd4d0d873fead8bc7aa164d19d82f6"
+"src/base.jl" = "34fcd37ba955549ec6515733f5a246d9daa12fc9b5b6e0dbe243c425ee8a5041"
+"src/codebook.jl" = "06c3e6c9a76964f71fdd6a1763fd06492caeaadefd33ca0ae0bec506897c6e65"
+"src/component.jl" = "ed3d2ae828b1f5f6c05c747783a8640acbb15420f0c28a2dabec4663f4876769"
+"src/encoding/conversion.jl" = "b7f8dce13a3dc7a83688efac9679ca985725928ab7fd57f92914c02a0c3865cd"
+"src/encoding/domain_wall.jl" = "6ea5879d9cdb4219094e6c3da3423fcd740f66a778f69a9a47e632b4920c8aa4"
+"src/encoding/one_hot.jl" = "92b234a18f2f789fca2a49acc13c0ab8f5ae870f329db2196f862ce8597eac7a"
+"src/encoding_validity.jl" = "4e8217647a8cff566b532d458a022f573a2b329fcf80e10e006cb7b7670e47d8"
+"src/finite_structural.jl" = "46bf5fb0cb1aeaca90c297128e9d59188a7c22ced8db492a0dbe5acf24b5f51c"
+"src/handmade/all_different.jl" = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+"src/handmade/linear_sum.jl" = "851f43f005c84c7633f02579e1ced9688454638bbed4cbdd333ddcc4ea17387b"
+"src/handmade/ordered.jl" = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+"src/intension_components.jl" = "b20fb5943dc3254352a700b327db279869169fba09fa64dc7150d818c2f1abc7"
+"src/learn.jl" = "0c494d6c986e8bbb1fb9b79c24156965f26ae10425142165ac550269437a1305"
+"src/local_relations.jl" = "f658028aebf09941c2da5dac559db62559067e4bb59b12f07b59aa22d59c149b"
+"src/one_hot_constraints.jl" = "acd0202712a0504e13f45660b2fd19be36a3c2f8bfeb2a95b5ed2ac7d0d1d686"
+"src/oracle.jl" = "754933c27c72cf66885fcb352cd8bfe45536accad72955b2d8172a9807e9853d"
+"src/scheduling_components.jl" = "6851fdd6aba690c7cedfaf55ae1e50006586ed45fbd44571736ec261d02a0ea1"
+"src/structural_components.jl" = "b30e37e0254aaa07cb13262410c6eb7d0b229680d1990cf186fbd57c88d1f8f9"
+"src/structured_codebook.jl" = "02978e69dd0a7323b2dde92636afc14807a721859d0d8e4105e7c6887806a62a"
+"src/truth_component.jl" = "8498036bb480909df2ff53a93690d8f6a677dc2f8153150cf86f9e2cdc7b5908"
+"src/validity.jl" = "0504768299cd833fa9b897b7978d608692a941537a9af527c00bfd6a5d79965b"
+"src/value_pair_guidance.jl" = "149b23836cbf08d71fb1668077f72777301a89c1a063297e2a64af6dc07f76df"
+
+[tests]
+available_suite_assertions = 8883
+earlier_reference_assertions = 5040
+excluded_cases = ["Q2 exact auxiliary calibration", "Q2 candidate motifs and validity", "Q3 independent small-code fixtures and rank method", "Learn"]
+exclusion_reason = "Three frozen-source tests reference absent perf fixtures. Learn was executed separately with Flux 0.14.25, DataFrames 1.8.2 and PrettyTables 3.5.0; all five examples completed, but that test contains zero assertions."
+floating_oracle = "100 random non-dyadic coefficient cases use the original polynomial in BigFloat and a conservative summation bound, including dense moves and reversed caller order."
+guidance_assertions = 3514
+ownership = "Guide inputs are copied; each workspace owns every scratch/output buffer. Original values and active state are restored after proposals. No original constraint validation is replaced by guidance."
+reference_compatibility_assertions = 1800

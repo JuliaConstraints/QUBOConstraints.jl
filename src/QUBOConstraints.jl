@@ -37,6 +37,7 @@ export validate_atomic_plan
 export AtomicSearchSpace, atomic_decision_domains, atomic_operator_code
 export encode_atomic_weights, decode_atomic_weights, compile_atomic_weights
 export AtomicEnumerativeOptimizer, AtomicTrainingResult
+export ValuePairGuidance
 
 # SECTION - includes
 include("base.jl")
@@ -68,5 +69,6 @@ include("encoding/conversion.jl")
 
 include("learn.jl")
 include("atomic_search.jl")
+include("value_pair_guidance.jl")
 
 end

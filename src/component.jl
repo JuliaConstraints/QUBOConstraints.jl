@@ -41,15 +41,15 @@ struct QUBOComponent{T<:Real}
         matrix = dropzeros!(sparse(ri[perm], cj[perm], vv[perm], n, n))
         all(isfinite, nonzeros(matrix)) || throw(ArgumentError("coefficient overflow"))
         li, lv = Int[], T[]
-        qi, qj, qv = Int[], Int[], T[]
         for j in 1:n, p in nzrange(matrix, j)
             i, v = rowvals(matrix)[p], nonzeros(matrix)[p]
             if i == j
                 push!(li, i); push!(lv, v)
-            else
-                push!(qi, i); push!(qj, j); push!(qv, v)
             end
         end
+        # The canonical matrix already owns sorted, combined sparse storage.
+        # Remove its diagonal in place instead of rebuilding off-diagonal terms.
+        SparseArrays.fkeep!((i, j, _) -> i != j, matrix)
         books = AbstractCodebook[deepcopy(b) for b in codebooks]
         allunique(b.variable for b in books) || throw(ArgumentError("duplicate codebook variable"))
         covered = BitID[b for book in books for b in book.bits]
@@ -59,7 +59,7 @@ struct QUBOComponent{T<:Real}
             for b in ordered if b.role !== :primary)
         all(b -> b in keys(meanings), keys(auxiliary_meanings)) ||
             throw(ArgumentError("meaning assigned to an absent or primary bit"))
-        return new{T}(ordered, sparsevec(li, lv, n), sparse(qi, qj, qv, n, n), T(offset),
+        return new{T}(ordered, sparsevec(li, lv, n), matrix, T(offset),
             books, meanings, String(applicability), String(provenance))
     end
 end
@@ -72,12 +72,12 @@ end
 function _energy(q::QUBOComponent, z)
     value = q.offset
     for p in eachindex(nonzeros(q.linear))
-        z[q.linear.nzind[p]] && (value += nonzeros(q.linear)[p])
+        z[q.linear.nzind[p]] == 1 && (value += nonzeros(q.linear)[p])
     end
     for j in axes(q.quadratic, 2)
-        z[j] || continue
+        z[j] == 1 || continue
         for p in nzrange(q.quadratic, j)
-            z[rowvals(q.quadratic)[p]] && (value += nonzeros(q.quadratic)[p])
+            z[rowvals(q.quadratic)[p]] == 1 && (value += nonzeros(q.quadratic)[p])
         end
     end
     return value
@@ -90,7 +90,9 @@ end
 function energy(q::QUBOComponent, z::AbstractVector)
     length(z) == length(q.bits) || throw(DimensionMismatch("wrong bit count"))
     all(b -> b == 0 || b == 1, z) || throw(ArgumentError("energy requires binary values"))
-    return _energy(q, Bool.(z))
+    # Validation establishes the same binary predicate used by the sparse
+    # traversal; a temporary Bool vector is unnecessary for numeric inputs.
+    return _energy(q, z)
 end
 
 """Return `(matrix, offset)` using the upper-triangular `z' * matrix * z` convention."""

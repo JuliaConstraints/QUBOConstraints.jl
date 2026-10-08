@@ -49,6 +49,30 @@
     floatq = QUBOComponent([x,y]; linear=[(1,2.0)],coefficient_type=Float64)
     @test (@inferred QUBOComponent{Float64}([x,y]; linear=[(1,2.0)])) isa QUBOComponent{Float64}
     @test (@inferred energy(floatq,[true,false])) == 2.0
+    @test (@inferred energy(floatq,[1,0])) == 2.0
+    @test (@inferred energy(floatq,[1.0,0.0])) == 2.0
+    @testset "Binary numeric input preserves canonical energy" begin
+        for T in (BigInt, Rational{BigInt}, Float64)
+            numeric = QUBOComponent{T}([y,x]; linear=[(1,-2),(2,3)],
+                quadratic=[(1,2,4),(2,1,-1),(1,1,2)], offset=-3)
+            for mask in 0:3
+                z = [!iszero(mask & (1 << (i-1))) for i in 1:2]
+                expected = energy(numeric,z)
+                for R in (Int, BigInt, Float64, Rational{Int})
+                    input = R.(z)
+                    @test energy(numeric,input) == expected
+                    @test input == R.(z)
+                    @test energy(numeric,view(input,:)) == expected
+                end
+            end
+        end
+        @test_throws ArgumentError energy(floatq,[0.5,1.0])
+        @test_throws ArgumentError energy(floatq,[NaN,0.0])
+        @test_throws ArgumentError energy(floatq,[Inf,0.0])
+        @test_throws DimensionMismatch energy(floatq,[1,0,1])
+        emptyq = QUBOComponent{Float64}(BitID[];offset=2)
+        @test energy(emptyq,Int[]) == 2.0
+    end
 end
 
 @testitem "Q1 exhaustive oracle, auxiliaries and invalid encodings" tags=[:q1] begin
