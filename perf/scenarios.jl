@@ -2,8 +2,7 @@ import QUBOConstraints as QC
 using Random
 const VG = QC.ValuePairGuidance
 
-"Revalidate every exact truth row of a prepared unary, binary or ternary plan."
-function atomic_validation_case(parameters)
+function atomic_fixture(parameters)
     width = get(parameters, "width", 16)
     arity = get(parameters, "arity", 2)
     width > 1 && arity in (1, 2, 3) || throw(ArgumentError("invalid atomic fixture shape"))
@@ -14,24 +13,44 @@ function atomic_validation_case(parameters)
             QC.structured_codebook(:y, 0:width-1)]
     expression = arity == 1 ? N(:eq, N(:neg, :x), 0) : arity == 2 ? N(:eq, :x, :y) :
         N(:eq, N(Symbol("if"), :c, :x, :y), 0)
-    plan = QC.atomic_plan(books, expression; semantic_id="perf/atomic-validation/$(arity)/$(width)")
+    (; books, expression, semantic_id="perf/atomic-fixture/$(arity)/$(width)")
+end
+
+function atomic_fixture_oracle(plan)
+    for node in plan.nodes
+        node.operator in (:variable, :constant) && continue
+        expected_rows = prod(length(plan.nodes[i].domain) for i in node.inputs)
+        length(node.rows) == expected_rows || return false
+        for row in node.rows
+            args = [Int(plan.nodes[i].domain[k]) for (i, k) in zip(node.inputs, row)]
+            expected = node.operator === :eq ? Int(args[1] == args[2]) :
+                node.operator === :neg ? -args[1] : args[1] == 1 ? args[2] : args[3]
+            node.domain[last(row)] == expected || return false
+        end
+    end
+    true
+end
+
+"Revalidate every exact truth row of a prepared unary, binary or ternary plan."
+function atomic_validation_case(parameters)
+    fixture = atomic_fixture(parameters)
+    plan = QC.atomic_plan(fixture.books, fixture.expression; semantic_id=fixture.semantic_id)
     prepare = () -> plan
     operation = state -> QC.validate_atomic_plan(state)
-    verify = (state, result) -> begin
-        result === true || return false
-        for node in state.nodes
-            node.operator in (:variable, :constant) && continue
-            expected_rows = prod(length(state.nodes[i].domain) for i in node.inputs)
-            length(node.rows) == expected_rows || return false
-            for row in node.rows
-                args = [Int(state.nodes[i].domain[k]) for (i, k) in zip(node.inputs, row)]
-                expected = node.operator === :eq ? Int(args[1] == args[2]) :
-                    node.operator === :neg ? -args[1] : args[1] == 1 ? args[2] : args[3]
-                node.domain[last(row)] == expected || return false
-            end
+    verify = (state, result) -> result === true && atomic_fixture_oracle(state)
+    (; prepare, operation, verify)
+end
+
+"Construct the complete ordered plan from already prepared source books and expression."
+function atomic_construction_case(parameters)
+    fixture = atomic_fixture(parameters)
+    prepare = () -> fixture
+    operation = state -> QC.atomic_plan(state.books, state.expression; semantic_id=state.semantic_id)
+    verify = (state, plan) -> QC.validate_atomic_plan(plan) && atomic_fixture_oracle(plan) &&
+        all(zip(state.books, plan.codebooks)) do (input, owned)
+            input !== owned && input.values == owned.values && input.values !== owned.values &&
+                input.bits == owned.bits && input.bits !== owned.bits
         end
-        true
-    end
     (; prepare, operation, verify)
 end
 

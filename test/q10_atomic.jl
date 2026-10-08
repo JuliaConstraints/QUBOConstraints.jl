@@ -58,6 +58,47 @@
     @test atomic_values(atomic_plan([],N(:eq,N(:pow,0,0),1);semantic_id="q10/power-zero"),Dict())[end]==1
 end
 
+@testitem "Atomic row construction preserves canonical order, ownership and budgets" tags=[:q10] begin
+    N=IntensionNode
+    books=[structured_codebook(s,[-3,8]) for s in (:x,:y)]
+    p=atomic_plan(books,N(:eq,:x,:y);semantic_id="builder/binary")
+    @test p.nodes[3].domain==BigInt[1,0]
+    @test p.nodes[3].rows==[[1,1,1],[2,1,2],[1,2,2],[2,2,1]]
+    unary=atomic_plan([structured_codebook(:x,[-2,0,3])],N(:eq,N(:neg,:x),0);semantic_id="builder/unary")
+    @test unary.nodes[2].domain==BigInt[2,0,-3]
+    @test unary.nodes[2].rows==[[1,1],[2,2],[3,3]]
+    ternary=atomic_plan([structured_codebook(:c,0:1),structured_codebook(:x,[-2,3]),structured_codebook(:y,[-1,4])],
+        N(:eq,N(Symbol("if"),:c,:x,:y),0);semantic_id="builder/ternary")
+    @test ternary.nodes[4].domain==BigInt[-1,-2,3,4]
+    @test ternary.nodes[4].rows==[[1,1,1,1],[2,1,1,2],[1,2,1,1],[2,2,1,3],
+        [1,1,2,4],[2,1,2,2],[1,2,2,4],[2,2,2,3]]
+    for plan in (p,unary,ternary)
+        @test validate_atomic_plan(plan)
+        rows=[row for node in plan.nodes for row in node.rows]
+        @test all(i==j || rows[i]!==rows[j] for i in eachindex(rows) for j in eachindex(rows))
+        @test all(node.domain!==other.domain && node.rows!==other.rows
+            for (i,node) in enumerate(plan.nodes) for other in plan.nodes[i+1:end])
+    end
+    @test p.codebooks[1]!==books[1] && p.codebooks[1].bits!==books[1].bits && p.codebooks[1].values!==books[1].values
+    original=copy(p.nodes[3].rows[2]);p.nodes[3].rows[1][1]=2
+    @test p.nodes[3].rows[2]==original
+    @test_throws ArgumentError validate_atomic_plan(p)
+    expression=N(:eq,:x,:y)
+    @test_throws CompilationLimit atomic_plan(books,expression;semantic_id="builder/local-budget",max_local_rows=3)
+    @test_throws CompilationLimit atomic_plan(books,expression;semantic_id="builder/total-budget",max_total_rows=3)
+    @test validate_atomic_plan(atomic_plan(books,expression;semantic_id="builder/exact-budget",max_local_rows=4,max_total_rows=4))
+    for op in (:div,:mod)
+        @test_throws ArgumentError atomic_plan([structured_codebook(:x,0:1),structured_codebook(:y,0:1)],
+            N(:eq,N(op,:x,:y),0);semantic_id="builder/partial")
+    end
+    @test_throws CompilationLimit atomic_plan([structured_codebook(:x,[2,3])],
+        N(:eq,N(:pow,:x,1000000),0);semantic_id="builder/value-budget")
+    shared=N(:add,:x,:y)
+    interned=atomic_plan(books,N(:eq,shared,shared);semantic_id="builder/shared")
+    @test count(n->n.operator===:add,interned.nodes)==1
+    @test interned.nodes[end].inputs==[3,3]
+end
+
 @testitem "Atomic validation fixed-arity truth rows and rejection guards" tags=[:q10] begin
     N=IntensionNode
     unary=Dict(:neg=>(x->-x),:abs=>abs,:sqr=>(x->x*x),:not=>(x->Int(x==0)))

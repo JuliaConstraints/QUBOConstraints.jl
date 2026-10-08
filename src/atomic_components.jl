@@ -91,12 +91,12 @@ function atomic_plan(books, expression; semantic_id::AbstractString,
             total+=count
             total<=max_total_rows || throw(CompilationLimit(:atomic_total_rows,total,big(max_total_rows)))
             values=BigInt[]
-            for indices in Iterators.product((eachindex(nodes[i].domain) for i in inputs)...)
-                args=BigInt[nodes[i].domain[k] for (i,k) in zip(inputs,indices)]
-                value=_atomic_apply(op,args,max_value_bits)
-                k=findfirst(==(value),values)
-                if k===nothing; push!(values,value); k=length(values); end
-                push!(rows,[Int[indices...];k])
+            if length(inputs)==1
+                _append_atomic_rows!(rows,values,nodes,op,inputs,Val(1),max_value_bits)
+            elseif length(inputs)==2
+                _append_atomic_rows!(rows,values,nodes,op,inputs,Val(2),max_value_bits)
+            else
+                _append_atomic_rows!(rows,values,nodes,op,inputs,Val(3),max_value_bits)
             end
             values
         end
@@ -147,6 +147,23 @@ function atomic_plan(books, expression; semantic_id::AbstractString,
     root=visit(expression,1)
     all(in((0,1)),nodes[root].domain) || throw(ArgumentError("atomic root must be Boolean"))
     return AtomicPlan(books,nodes,root,String(semantic_id))
+end
+
+function _append_atomic_rows!(rows,values,nodes,op,inputs,::Val{N},max_value_bits) where N
+    # Preserve Cartesian traversal and first-occurrence output-domain order.
+    # Each retained row still owns its public Vector{Int} storage.
+    indices_by_input=ntuple(k->eachindex(nodes[inputs[k]].domain),Val(N))
+    for indices in Iterators.product(indices_by_input...)
+        args=ntuple(k->nodes[inputs[k]].domain[indices[k]],Val(N))
+        value=_atomic_apply(op,args,max_value_bits)
+        output=findfirst(==(value),values)
+        if output===nothing; push!(values,value); output=length(values); end
+        row=Vector{Int}(undef,N+1)
+        for k in 1:N; row[k]=indices[k]; end
+        row[end]=output
+        push!(rows,row)
+    end
+    values
 end
 
 """Evaluate the explicit atomic graph (a diagnostic, NOT a post-QUBO repair)."""

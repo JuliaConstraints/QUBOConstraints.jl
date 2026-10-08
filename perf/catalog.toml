@@ -3,6 +3,45 @@ schema_version = "perfchecker-scenario-catalog/1"
 
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "atomic_construction_case"
+id = "construct_atomic_unary_16"
+implementation = "owned-static-cartesian-rows-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    arity = 1
+    width = 16
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "atomic_construction_case"
+id = "construct_atomic_binary_16"
+implementation = "owned-static-cartesian-rows-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    arity = 2
+    width = 16
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "atomic_construction_case"
+id = "construct_atomic_ternary_8"
+implementation = "owned-static-cartesian-rows-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    arity = 3
+    width = 8
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "atomic_validation_case"
 id = "validate_atomic_unary_16"
 implementation = "exact-static-tuple-rows-v1"
