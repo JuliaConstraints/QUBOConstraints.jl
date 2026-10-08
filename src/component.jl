@@ -38,7 +38,9 @@ struct QUBOComponent{T<:Real}
         end
         all(isfinite, vv) && isfinite(T(offset)) || throw(ArgumentError("nonfinite coefficient"))
         perm = sortperm(eachindex(vv); by = k -> (cj[k], ri[k], vv[k]))
-        matrix = dropzeros!(sparse(ri[perm], cj[perm], vv[perm], n, n))
+        # Sparse assembly reads the sorted coordinates without retaining them;
+        # views avoid three copied permutation buffers while preserving order.
+        matrix = dropzeros!(sparse(view(ri, perm), view(cj, perm), view(vv, perm), n, n))
         all(isfinite, nonzeros(matrix)) || throw(ArgumentError("coefficient overflow"))
         li, lv = Int[], T[]
         for j in 1:n, p in nzrange(matrix, j)

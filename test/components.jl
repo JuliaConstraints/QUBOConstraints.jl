@@ -75,6 +75,46 @@
     end
 end
 
+@testitem "Sorted sparse views retain canonical reductions and owned storage" begin
+    using SparseArrays
+    for T in (Float64,BigInt,Rational{BigInt}),width in (0,1,4,32)
+        bits=reverse([BitID(:view_fixture,i) for i in 1:width])
+        large=T===Float64 ? T(1e16) : T(big(2)^80)
+        half=T===BigInt ? T(3) : T(3//2)
+        small=T===BigInt ? T(1) : T(1//10)
+        linear=Tuple{Int,T}[(i,large) for i in 1:width]
+        append!(linear,[(i,-large) for i in 1:width])
+        append!(linear,[(i,T(1)) for i in 1:width])
+        quadratic=Tuple{Int,Int,T}[(i,i,half) for i in 1:width]
+        for i in 1:width-1
+            append!(quadratic,[(i,i+1,large),(i+1,i,-large),(i,i+1,small)])
+        end
+        # Independently remap, order and reduce the original coefficients. In
+        # Float64 this includes cancellation that depends on canonical order.
+        remap=Dict(bit=>i for (i,bit) in enumerate(sort(bits)))
+        terms=[(remap[bits[i]],remap[bits[i]],v) for (i,v) in linear]
+        append!(terms,[(minmax(remap[bits[i]],remap[bits[j]])...,v) for (i,j,v) in quadratic])
+        sort!(terms;by=t->(t[2],t[1],t[3]))
+        coefficients=Dict{Tuple{Int,Int},T}()
+        for (i,j,v) in terms
+            key=(i,j);coefficients[key]=haskey(coefficients,key) ? coefficients[key]+v : v
+        end
+        q=QUBOComponent{T}(bits;linear,quadratic,offset=2)
+        @test q.bits==sort(bits)
+        @test q.offset==T(2)
+        for i in 1:width,j in i:width
+            @test (i==j ? q.linear[i] : q.quadratic[i,j])==get(coefficients,(i,j),zero(T))
+        end
+        @test all(i<j for j in 1:width for i in rowvals(q.quadratic)[nzrange(q.quadratic,j)])
+        @test all(!iszero,nonzeros(q.linear)) && all(!iszero,nonzeros(q.quadratic))
+        before_linear,before_quadratic=copy(q.linear),copy(q.quadratic)
+        empty!(linear);empty!(quadratic);empty!(bits)
+        @test q.linear==before_linear && q.quadratic==before_quadratic && length(q.bits)==width
+    end
+    @test_throws ArgumentError QUBOComponent{Float64}([BitID(:overflow,1)];linear=[(1,1e308),(1,1e308)])
+    @test_throws ArgumentError QUBOComponent{Float64}([BitID(:nonfinite,1)];quadratic=[(1,1,NaN)])
+end
+
 @testitem "Q1 owned heterogeneous codebook coverage" tags=[:q1] begin
     import QUBOConstraints as QC
     struct TupleBitsCodebook <: QC.AbstractCodebook
