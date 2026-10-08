@@ -31,6 +31,45 @@ function component_construction_case(parameters)
     (; prepare, operation, verify)
 end
 
+"Construction with owned heterogeneous codebooks covering every supplied bit."
+function component_codebook_case(parameters)
+    count = get(parameters, "codebooks", 64)
+    count > 0 || throw(ArgumentError("at least one fixture codebook required"))
+    T = get(parameters, "coefficient_type", "float") == "exact" ? BigInt : Float64
+    books = QC.AbstractCodebook[isodd(i) ? QC.codebook(Symbol(:x, i), [-3, 5]) :
+        QC.structured_codebook(Symbol(:x, i), [-3, 5]; encoding=:one_hot) for i in 1:count]
+    bits = reverse(QC.BitID[b for book in books for b in book.bits])
+    n = length(bits)
+    linear = [(i, T(mod(i, 7) - 3)) for i in 1:n]
+    quadratic = [(i, i + 1, T(2)) for i in 1:n-1]
+    append!(quadratic, [(i + 1, i, T(-1)) for i in 1:n-1])
+    append!(quadratic, [(i, i, T(1)) for i in 1:n])
+    prepare = () -> (; bits, linear, quadratic, books)
+    operation = if T === BigInt
+        state -> QC.QUBOComponent{BigInt}(state.bits; linear=state.linear,
+            quadratic=state.quadratic, offset=2, codebooks=state.books)
+    else
+        state -> QC.QUBOComponent{Float64}(state.bits; linear=state.linear,
+            quadratic=state.quadratic, offset=2, codebooks=state.books)
+    end
+    verify = (state, q) -> begin
+        for pattern in (i -> false, i -> true, isodd, i -> mod(i, 3) == 0)
+            original = [pattern(i) for i in 1:n]
+            z = [original[findfirst(==(bit), state.bits)] for bit in q.bits]
+            expected = T(2) + sum(v * original[i] for (i, v) in state.linear) +
+                sum(v * original[i] * original[j] for (i, j, v) in state.quadratic)
+            QC.energy(q, z) == expected || return false
+        end
+        length(q.codebooks) == count || return false
+        all(zip(q.codebooks, state.books)) do (owned, input)
+            owned !== input && owned.variable == input.variable &&
+                owned.bits == input.bits && owned.bits !== input.bits &&
+                owned.values == input.values && owned.values !== input.values
+        end
+    end
+    (; prepare, operation, verify)
+end
+
 # Retained whole-interaction reference for matched-work comparisons. It has the
 # same canonical polynomial and owned buffers as the sparse operation below.
 function scan_delta_reference!(w, g, ids, replacements)

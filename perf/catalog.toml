@@ -136,3 +136,29 @@ source = "scenarios.jl"
     operation = "delta"
     repetitions = 1024
     variables = 128
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_codebook_case"
+id = "construct_mixed_books_float_64"
+implementation = "owned-codebook-coverage-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    codebooks = 64
+    coefficient_type = "float"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_codebook_case"
+id = "construct_mixed_books_exact_64"
+implementation = "owned-codebook-coverage-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    codebooks = 64
+    coefficient_type = "exact"

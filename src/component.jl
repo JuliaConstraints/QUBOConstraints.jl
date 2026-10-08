@@ -52,9 +52,12 @@ struct QUBOComponent{T<:Real}
         SparseArrays.fkeep!((i, j, _) -> i != j, matrix)
         books = AbstractCodebook[deepcopy(b) for b in codebooks]
         allunique(b.variable for b in books) || throw(ArgumentError("duplicate codebook variable"))
-        covered = BitID[b for book in books for b in book.bits]
+        covered = BitID[]
+        for book in books
+            _append_codebook_bits!(covered, book)
+        end
         allunique(covered) || throw(ArgumentError("overlapping codebooks"))
-        all(b -> b in ordered, covered) || throw(ArgumentError("codebook bit missing from component"))
+        all(b -> haskey(positions, b), covered) || throw(ArgumentError("codebook bit missing from component"))
         meanings = Dict{BitID,String}(b => get(auxiliary_meanings, b, "uninterpreted")
             for b in ordered if b.role !== :primary)
         all(b -> b in keys(meanings), keys(auxiliary_meanings)) ||
@@ -62,6 +65,13 @@ struct QUBOComponent{T<:Real}
         return new{T}(ordered, sparsevec(li, lv, n), matrix, T(offset),
             books, meanings, String(applicability), String(provenance))
     end
+end
+
+# Specialize iteration once per concrete codebook, instead of carrying an
+# abstract inner iterator through the flattened metadata comprehension.
+function _append_codebook_bits!(covered::Vector{BitID}, book::AbstractCodebook)
+    append!(covered, book.bits)
+    return covered
 end
 
 function QUBOComponent(bits::AbstractVector{BitID}; coefficient_type::Type{T} = BigInt,
