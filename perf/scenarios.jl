@@ -2,6 +2,39 @@ import QUBOConstraints as QC
 using Random
 const VG = QC.ValuePairGuidance
 
+"Revalidate every exact truth row of a prepared unary, binary or ternary plan."
+function atomic_validation_case(parameters)
+    width = get(parameters, "width", 16)
+    arity = get(parameters, "arity", 2)
+    width > 1 && arity in (1, 2, 3) || throw(ArgumentError("invalid atomic fixture shape"))
+    N = QC.IntensionNode
+    books = arity == 1 ? [QC.structured_codebook(:x, 0:width-1)] :
+        arity == 2 ? [QC.structured_codebook(s, 0:width-1) for s in (:x, :y)] :
+        [QC.structured_codebook(:c, 0:1), QC.structured_codebook(:x, 0:width-1),
+            QC.structured_codebook(:y, 0:width-1)]
+    expression = arity == 1 ? N(:eq, N(:neg, :x), 0) : arity == 2 ? N(:eq, :x, :y) :
+        N(:eq, N(Symbol("if"), :c, :x, :y), 0)
+    plan = QC.atomic_plan(books, expression; semantic_id="perf/atomic-validation/$(arity)/$(width)")
+    prepare = () -> plan
+    operation = state -> QC.validate_atomic_plan(state)
+    verify = (state, result) -> begin
+        result === true || return false
+        for node in state.nodes
+            node.operator in (:variable, :constant) && continue
+            expected_rows = prod(length(state.nodes[i].domain) for i in node.inputs)
+            length(node.rows) == expected_rows || return false
+            for row in node.rows
+                args = [Int(state.nodes[i].domain[k]) for (i, k) in zip(node.inputs, row)]
+                expected = node.operator === :eq ? Int(args[1] == args[2]) :
+                    node.operator === :neg ? -args[1] : args[1] == 1 ? args[2] : args[3]
+                node.domain[last(row)] == expected || return false
+            end
+        end
+        true
+    end
+    (; prepare, operation, verify)
+end
+
 "Canonical sparse construction with duplicate, reversed and diagonal input terms."
 function component_construction_case(parameters)
     n = get(parameters, "bits", 128)

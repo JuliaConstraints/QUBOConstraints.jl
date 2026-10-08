@@ -201,18 +201,34 @@ function validate_atomic_plan(plan::AtomicPlan;max_rows::Integer=1000000,max_val
         total+=expected
         total<=max_rows || throw(CompilationLimit(:atomic_validation_rows,total,big(max_rows)))
         length(n.rows)==expected || throw(ArgumentError("incomplete atomic truth relation"))
-        seen=Set{Tuple}()
-        for row in n.rows
-            length(row)==arity+1 || throw(ArgumentError("invalid atomic row width"))
-            all(1<=k<=length(plan.nodes[j].domain) for (j,k) in zip(n.inputs,row[1:end-1])) && 1<=last(row)<=length(n.domain) ||
-                throw(ArgumentError("atomic row index outside domain"))
-            key=Tuple(row[1:end-1]); key in seen && throw(ArgumentError("duplicate atomic input row")); push!(seen,key)
-            value=_atomic_apply(n.operator,BigInt[plan.nodes[j].domain[k] for (j,k) in zip(n.inputs,key)],max_value_bits)
-            n.domain[last(row)]==value || throw(ArgumentError("incorrect atomic truth row"))
+        if arity==1
+            _validate_atomic_rows(plan,n,Val(1),max_value_bits)
+        elseif arity==2
+            _validate_atomic_rows(plan,n,Val(2),max_value_bits)
+        else
+            _validate_atomic_rows(plan,n,Val(3),max_value_bits)
         end
     end
     sort!(covered)==collect(eachindex(plan.codebooks)) || throw(ArgumentError("missing/duplicate source nodes"))
     all(in((0,1)),plan.nodes[plan.root].domain) || throw(ArgumentError("non-Boolean atomic root"))
+    true
+end
+
+function _validate_atomic_rows(plan::AtomicPlan,n::AtomicNode,::Val{N},max_value_bits) where N
+    # Atomic operations have at most three inputs. Fixed-size keys and arguments
+    # preserve each exact truth-row check without allocating row slices/vectors.
+    seen=Set{NTuple{N,Int}}()
+    for row in n.rows
+        length(row)==N+1 || throw(ArgumentError("invalid atomic row width"))
+        all(k->1<=row[k]<=length(plan.nodes[n.inputs[k]].domain),1:N) && 1<=last(row)<=length(n.domain) ||
+            throw(ArgumentError("atomic row index outside domain"))
+        key=ntuple(k->row[k],Val(N))
+        key in seen && throw(ArgumentError("duplicate atomic input row"))
+        push!(seen,key)
+        args=ntuple(k->plan.nodes[n.inputs[k]].domain[key[k]],Val(N))
+        value=_atomic_apply(n.operator,args,max_value_bits)
+        n.domain[last(row)]==value || throw(ArgumentError("incorrect atomic truth row"))
+    end
     true
 end
 
