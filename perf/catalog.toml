@@ -77,7 +77,7 @@ source = "scenarios.jl"
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "component_construction_case"
 id = "construct_float_128"
-implementation = "canonical-owned-sparse-v1"
+implementation = "canonical-compact-owned-diagonal-v2"
 repeatable = true
 requirements = ["QUBOConstraints"]
 source = "scenarios.jl"
@@ -89,7 +89,7 @@ source = "scenarios.jl"
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "component_construction_case"
 id = "construct_exact_128"
-implementation = "canonical-owned-sparse-v1"
+implementation = "canonical-compact-owned-diagonal-v2"
 repeatable = true
 requirements = ["QUBOConstraints"]
 source = "scenarios.jl"
@@ -212,7 +212,7 @@ source = "scenarios.jl"
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "component_codebook_case"
 id = "construct_mixed_books_float_64"
-implementation = "owned-codebook-coverage-v1"
+implementation = "canonical-compact-owned-diagonal-v2"
 repeatable = true
 requirements = ["QUBOConstraints"]
 source = "scenarios.jl"
@@ -224,7 +224,7 @@ source = "scenarios.jl"
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "component_codebook_case"
 id = "construct_mixed_books_exact_64"
-implementation = "owned-codebook-coverage-v1"
+implementation = "canonical-compact-owned-diagonal-v2"
 repeatable = true
 requirements = ["QUBOConstraints"]
 source = "scenarios.jl"
@@ -280,3 +280,27 @@ source = "scenarios.jl"
     [scenarios.parameters]
     shape = "mixed_rational"
     width = 64
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "rational_component_case"
+id = "construct_rational_sparse_64"
+implementation = "canonical-compact-owned-diagonal-v2"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 64
+    dense = false
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "rational_component_case"
+id = "construct_rational_dense_64"
+implementation = "canonical-compact-owned-diagonal-v2"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 64
+    dense = true

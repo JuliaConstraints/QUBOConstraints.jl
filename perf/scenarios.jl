@@ -2,6 +2,31 @@ import QUBOConstraints as QC
 using Random
 const VG = QC.ValuePairGuidance
 
+function rational_component_case(parameters)
+    n=get(parameters,"bits",64)
+    n>=0 || throw(ArgumentError("nonnegative rational fixture width required"))
+    dense=get(parameters,"dense",false)
+    T=Rational{BigInt}
+    bits=reverse([QC.BitID(:rational,i) for i in 1:n])
+    linear=[(i,T((mod(i,7)-3)//3)) for i in 1:n]
+    quadratic=dense ? [(i,j,T((mod(i+j,7)-3)//5)) for j in 1:n for i in 1:j] :
+        [(i,i+1,T(2//5)) for i in 1:n-1]
+    append!(quadratic,[(i,i,T(-1//3)) for i in 1:n])
+    prepare=()->(;bits,linear,quadratic)
+    operation=s->QC.QUBOComponent{Rational{BigInt}}(s.bits;linear=s.linear,quadratic=s.quadratic,offset=2)
+    verify=(s,q)->begin
+        for pattern in (i->false,i->true,isodd,i->mod(i,3)==0)
+            original=[pattern(i) for i in 1:n]
+            expected=T(2)+sum(v*original[i] for (i,v) in s.linear;init=zero(T))+
+                sum(v*original[i]*original[j] for (i,j,v) in s.quadratic;init=zero(T))
+            QC.energy(q,reverse(original))==expected || return false
+        end
+        true
+    end
+    (;prepare,operation,verify)
+end
+
+
 "Complete composition with shared primary books, renamed auxiliaries and promoted coefficients."
 function component_composition_case(parameters)
     width=get(parameters,"width",64)

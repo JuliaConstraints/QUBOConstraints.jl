@@ -300,3 +300,52 @@ end
     @test energy(compose(float,rational),[true])==Float64(1//3)
     @test energy(compose(rational,float),[true])==Float64(1//3)
 end
+@testitem "Canonical diagonal storage is exact and owned" tags=[:q1] begin
+    using SparseArrays
+    for T in (Float64,BigInt,Rational{BigInt}),n in (0,1,2,8,32),mode in (:none,:full,:holes,:cancelled)
+        coefficient(k)=T===Rational{BigInt} ? T(k//3) : T(k)
+        bits=reverse([BitID(:diagonal,i) for i in 1:n])
+        linear=Tuple{Int,T}[]
+        quadratic=[(i,j,coefficient(mod(i+j,5)-2)) for j in 1:n for i in 1:j-1]
+        for i in 1:n
+            if mode===:full || (mode===:holes && isodd(i))
+                push!(linear,(i,coefficient(i)))
+                push!(quadratic,(i,i,coefficient(-2)))
+            elseif mode===:cancelled
+                push!(linear,(i,coefficient(3)))
+                push!(quadratic,(i,i,coefficient(-3)))
+            end
+        end
+        expected=zeros(T,n,n)
+        for (i,v) in linear;expected[n-i+1,n-i+1]+=v;end
+        for (i,j,v) in quadratic
+            row,column=minmax(n-i+1,n-j+1)
+            expected[row,column]+=v
+        end
+        q=QUBOComponent{T}(bits;linear,quadratic,offset=2)
+        diagonal=[expected[i,i] for i in 1:n]
+        indices=findall(!iszero,diagonal)
+        @test q.linear.nzind==indices
+        @test nonzeros(q.linear)==diagonal[indices]
+        @test length(q.linear)==n && nnz(q.linear)==length(indices)
+        @test all(iszero(q.quadratic[i,i]) for i in 1:n)
+        @test dense_qubo(q).matrix==expected
+        @test issorted(q.linear.nzind) && allunique(q.linear.nzind)
+        patterns=unique([[f(i) for i in 1:n] for f in (i->false,i->true,isodd,i->mod(i,3)==0)])
+        for original in patterns
+            value=T(2)+sum(v*original[i] for (i,v) in linear;init=zero(T))+
+                sum(v*original[i]*original[j] for (i,j,v) in quadratic;init=zero(T))
+            @test energy(q,reverse(original))==value
+        end
+        before=component_artifact(q)
+        isempty(linear) || (linear[1]=(1,coefficient(99)))
+        isempty(quadratic) || (quadratic[1]=(1,1,coefficient(99)))
+        @test component_artifact(q)==before
+    end
+    for T in (BigInt,Rational{BigInt})
+        huge=T(big(2)^256)
+        q=QUBOComponent{T}([BitID(:huge_diagonal,1)];linear=[(1,huge)],offset=-huge)
+        @test energy(q,[false])==-huge && energy(q,[true])==0
+        @test nonzeros(q.linear)==[huge]
+    end
+end

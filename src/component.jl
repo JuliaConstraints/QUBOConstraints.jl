@@ -42,11 +42,22 @@ struct QUBOComponent{T<:Real}
         # views avoid three copied permutation buffers while preserving order.
         matrix = dropzeros!(sparse(view(ri, perm), view(cj, perm), view(vv, perm), n, n))
         all(isfinite, nonzeros(matrix)) || throw(ArgumentError("coefficient overflow"))
-        li, lv = Int[], T[]
-        for j in 1:n, p in nzrange(matrix, j)
-            i, v = rowvals(matrix)[p], nonzeros(matrix)[p]
-            if i == j
-                push!(li, i); push!(lv, v)
+        # Canonical upper-triangular columns place a stored diagonal last.
+        # Its sorted unique indices can use compact owned buffers directly.
+        diagonal_count = 0
+        for j in 1:n
+            p = matrix.colptr[j+1] - 1
+            diagonal_count += p >= matrix.colptr[j] && rowvals(matrix)[p] == j
+        end
+        li = Vector{Int}(undef, diagonal_count)
+        lv = Vector{T}(undef, diagonal_count)
+        diagonal_index = 0
+        for j in 1:n
+            p = matrix.colptr[j+1] - 1
+            if p >= matrix.colptr[j] && rowvals(matrix)[p] == j
+                diagonal_index += 1
+                li[diagonal_index] = j
+                lv[diagonal_index] = nonzeros(matrix)[p]
             end
         end
         # The canonical matrix already owns sorted, combined sparse storage.
@@ -64,7 +75,7 @@ struct QUBOComponent{T<:Real}
             for b in ordered if b.role !== :primary)
         all(b -> b in keys(meanings), keys(auxiliary_meanings)) ||
             throw(ArgumentError("meaning assigned to an absent or primary bit"))
-        return new{T}(ordered, sparsevec(li, lv, n), matrix, T(offset),
+        return new{T}(ordered, SparseVector(n, li, lv), matrix, T(offset),
             books, meanings, String(applicability), String(provenance))
     end
 end
