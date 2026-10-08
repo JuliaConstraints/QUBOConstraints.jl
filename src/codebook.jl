@@ -16,6 +16,17 @@ Base.hash(a::BitID, h::UInt) = hash((a.owner, a.index, a.role), h)
 Base.isless(a::BitID, b::BitID) =
     isless((a.role, a.owner, a.index), (b.role, b.owner, b.index))
 
+# Every field of a bit identity is an immutable Symbol or integer. Reusing the
+# value is safe while arrays containing it still receive independent storage.
+Base.deepcopy_internal(bit::BitID, ::IdDict) = bit
+function Base.deepcopy_internal(memory::Memory{BitID}, dictionary::IdDict)
+    haskey(dictionary, memory) && return dictionary[memory]::Memory{BitID}
+    copied = copy(memory)
+    # Memoize the buffer so reshapes and views retain their copied alias graph.
+    dictionary[memory] = copied
+    return copied
+end
+
 abstract type AbstractCodebook end
 
 # Typed protocol accessors retain field contracts across heterogeneous codebook kinds.

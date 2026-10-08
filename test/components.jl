@@ -349,3 +349,51 @@ end
         @test nonzeros(q.linear)==[huge]
     end
 end
+@testitem "Immutable bit copies preserve owned buffer relationships" tags=[:q1] begin
+    @test all(T->T===Symbol || isbitstype(T),fieldtypes(BitID))
+    for owner in (:x,Symbol("space/λ"),Symbol("")),role in (:primary,:semantic_auxiliary,:quadratization_auxiliary),index in (1,17,typemax(Int))
+        bit=BitID(owner,index;role)
+        @test deepcopy(bit)===bit
+        @test deepcopy((bit,bit))===(bit,bit)
+    end
+    for n in (0,1,2,16,128)
+        bits=[BitID(:buffer,i) for i in 1:n]
+        copied=deepcopy(bits)
+        @test copied==bits && copied!==bits
+        graph=deepcopy((bits,bits))
+        @test graph[1]===graph[2] && graph[1]!==bits
+        if n>0
+            copied[1]=BitID(:changed,1)
+            @test bits[1]==BitID(:buffer,1)
+        end
+    end
+    bits=[BitID(:alias,i) for i in 1:8]
+    graph=(bits,bits,reshape(bits,2,4),view(bits,2:5))
+    copied=deepcopy(graph)
+    @test copied[1]===copied[2] && copied[1]!==bits
+    @test copied[3]==reshape(bits,2,4) && copied[4]==view(bits,2:5)
+    copied[1][2]=BitID(:changed,2)
+    @test copied[3][2,1]==copied[1][2] && copied[4][1]==copied[1][2]
+    @test bits[2]==BitID(:alias,2)
+    # Unassigned slots and shared direct memory remain valid after copying.
+    memory=Memory{BitID}(undef,4);memory[1]=BitID(:memory,1);memory[3]=BitID(:memory,3)
+    duplicated=deepcopy((memory,memory))
+    @test duplicated[1]===duplicated[2] && duplicated[1]!==memory
+    @test [isassigned(duplicated[1],i) for i in 1:4]==[isassigned(memory,i) for i in 1:4]
+    @test duplicated[1][1]==memory[1] && duplicated[1][3]==memory[3]
+    duplicated[1][1]=BitID(:changed_memory,1)
+    @test memory[1]==BitID(:memory,1)
+    # Default copying of mutable/non-BitID semantic values is still recursive.
+    values=[[1],[2]];book=codebook(:nested_values,values)
+    owned=deepcopy(book)
+    @test owned.bits==book.bits && owned.bits!==book.bits
+    @test owned.values==book.values && owned.values!==book.values && owned.values[1]!==book.values[1]
+    @test owned.codes==book.codes && owned.codes!==book.codes
+    owned.values[1][1]=99
+    @test book.values[1]==[1]
+    owned.bits[1]=BitID(:changed_book,1)
+    @test book.bits[1]!=owned.bits[1]
+    cycle=Any[bits];push!(cycle,cycle)
+    owned_cycle=deepcopy(cycle)
+    @test owned_cycle[2]===owned_cycle && owned_cycle[1]!==bits && owned_cycle[1]==bits
+end

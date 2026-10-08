@@ -2,6 +2,26 @@ import QUBOConstraints as QC
 using Random
 const VG = QC.ValuePairGuidance
 
+"Deep-copy bit storage while preserving repeated-array, reshape and view relationships."
+function bit_storage_copy_case(parameters)
+    n=get(parameters,"bits",128)
+    n>=4 || throw(ArgumentError("at least four alias fixture bits required"))
+    bits=[QC.BitID(Symbol(:owner,mod(i,7)),i;role=isodd(i) ? :primary : :semantic_auxiliary) for i in 1:n]
+    input=(bits,bits,reshape(bits,1,n),view(bits,2:n-1))
+    prepare=()->input
+    operation=deepcopy
+    verify=(state,owned)->begin
+        owned==state && owned[1]!==state[1] && owned[1]===owned[2] || return false
+        expected=owned[1][2]
+        changed=QC.BitID(:changed,2)
+        owned[1][2]=changed
+        valid=owned[3][1,2]==changed && owned[4][1]==changed && state[1][2]==expected
+        owned[1][2]=expected
+        valid && owned==state
+    end
+    (;prepare,operation,verify)
+end
+
 function rational_component_case(parameters)
     n=get(parameters,"bits",64)
     n>=0 || throw(ArgumentError("nonnegative rational fixture width required"))
