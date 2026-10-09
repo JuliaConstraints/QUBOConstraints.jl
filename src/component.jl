@@ -26,9 +26,19 @@ struct QUBOComponent{T<:Real}
         # Check the owned sorted buffer instead of allocating a hash set.
         all(i -> ordered[i-1] != ordered[i], 2:length(ordered)) ||
             throw(ArgumentError("duplicate bit identity"))
-        positions = Dict(b => i for (i, b) in enumerate(ordered))
-        remap = [positions[b] for b in bits]
         n = length(bits)
+        # Canonical inputs already use positional coefficient indices.
+        # Keep a concrete integer vector through sparse assembly.
+        canonical = true
+        for (i, bit) in enumerate(bits)
+            if bit != ordered[i]
+                canonical = false
+                break
+            end
+        end
+        positions = canonical ? Dict{BitID,Int}() :
+            Dict(b => i for (i, b) in enumerate(ordered))
+        remap = canonical ? collect(Base.OneTo(n)) : [positions[b] for b in bits]
         ri, cj, vv = Int[], Int[], T[]
         for (i, v) in linear
             1 <= i <= n || throw(ArgumentError("linear index out of bounds"))
@@ -69,7 +79,7 @@ struct QUBOComponent{T<:Real}
         books = AbstractCodebook[deepcopy(b) for b in codebooks]
         # Iterate larger owned book lists directly, retaining the original
         # key equality and support for heterogeneous variable key types.
-if length(books) < 64
+        if length(books) < 64
             allunique(b.variable for b in books) ||
                 throw(ArgumentError("duplicate codebook variable"))
         else
@@ -83,6 +93,13 @@ if length(books) < 64
         covered = BitID[]
         for book in books
             _append_codebook_bits!(covered, book)
+        end
+        # Covered codebook bits still require canonical identity lookups.
+        if canonical && !isempty(covered)
+            sizehint!(positions, length(ordered))
+            for (i, bit) in enumerate(ordered)
+                positions[bit] = i
+            end
         end
         # Canonical positions bijectively identify the covered bits. Larger
         # valid lists can retain integer keys; small or missing-bit lists keep

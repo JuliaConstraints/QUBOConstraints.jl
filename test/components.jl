@@ -646,6 +646,90 @@ end
     end
 end
 
+@testitem "Canonical remaps preserve arbitrary input order and codebook validation" tags=[:q1] begin
+    function remap_book(variable,bits)
+        n=length(bits)
+        n==0 && return Codebook(variable,bits,[0],falses(0,1),[1])
+        Codebook(variable,bits,[-1,1],hcat(falses(n),trues(n)),[1,2])
+    end
+    for T in (Float64,BigInt,Rational{BigInt}),n in (0,1,2,31,32,33,128,129),
+            order in (:canonical,:reversed),shape in (:vector,:strided),with_books in (false,true)
+        identities=sort([BitID(Symbol(:remap_owner,mod(i,3)),i;
+            role=!with_books&&mod(i,3)==0 ? :semantic_auxiliary : :primary) for i in 1:n])
+        input=order===:canonical ? copy(identities) : reverse(identities)
+        storage=shape===:vector ? copy(input) : [BitID(:remap_padding,i) for i in 1:2n+2]
+        bits=if shape===:vector
+            storage
+        else
+            storage[2:2:2n]=input
+            view(storage,2:2:2n)
+        end
+        before=copy(storage)
+        coefficient(v)=T===Rational{BigInt} ? T(v//3) : T(v)
+        linear=[(i,coefficient(mod(i,7)-3)) for i in 1:n]
+        quadratic=[(i,i+1,coefficient(2)) for i in 1:n-1]
+        append!(quadratic,[(i+1,i,coefficient(-1)) for i in 1:n-1])
+        append!(quadratic,[(i,i,coefficient(1)) for i in 1:n])
+        split=cld(n,2)
+        books=with_books ? AbstractCodebook[remap_book(:left,identities[1:split]),
+            remap_book(:right,identities[split+1:n])] : AbstractCodebook[]
+        meanings=Dict(bit=>"meaning-$i" for (i,bit) in enumerate(input) if bit.role!==:primary)
+        q=QUBOComponent{T}(bits;linear,quadratic,offset=2,codebooks=books,
+            auxiliary_meanings=meanings,applicability="remap fixture",provenance="original order")
+        @test q.bits==identities && q.bits!==bits && storage==before
+        @test q.auxiliary_meanings==meanings
+        @test q.applicability=="remap fixture" && q.provenance=="original order"
+        @test length(q.codebooks)==length(books)
+        @test all(zip(q.codebooks,books)) do (owned,original)
+            owned!==original && owned.variable==original.variable && owned.bits==original.bits &&
+                owned.bits!==original.bits && owned.values==original.values && owned.values!==original.values
+        end
+        positions=Dict(bit=>i for (i,bit) in enumerate(input))
+        for pattern in (i->false,i->true,isodd,i->mod(i,3)==0)
+            original=[pattern(i) for i in 1:n]
+            z=[original[positions[bit]] for bit in q.bits]
+            expected=T(2)+sum(v*original[i] for (i,v) in linear;init=zero(T))+
+                sum(v*original[i]*original[j] for (i,j,v) in quadratic;init=zero(T))
+            @test energy(q,z)==expected
+        end
+        @test storage==before && all(zip(q.codebooks,books)) do (owned,original)
+            owned.bits==original.bits && owned.values==original.values
+        end
+        if n>0
+            bits[1]=BitID(:changed_input,1)
+            @test q.bits==identities
+            q.bits[1]=BitID(:changed_output,1)
+            @test bits[1]==BitID(:changed_input,1)
+        end
+    end
+    function constructor_error(bits;kwargs...)
+        try
+            QUBOComponent(bits;kwargs...)
+            error("expected constructor rejection")
+        catch e
+            sprint(showerror,e)
+        end
+    end
+    for n in (1,16,128),order in (:canonical,:reversed)
+        identities=[BitID(:guard_remap,i) for i in 1:n]
+        bits=order===:canonical ? identities : reverse(identities)
+        overlap=AbstractCodebook[remap_book(:a,identities),remap_book(:b,identities)]
+        @test constructor_error(bits;codebooks=overlap)=="ArgumentError: overlapping codebooks"
+        absent=BitID(:absent_remap,1)
+        missing=AbstractCodebook[remap_book(:a,[absent])]
+        @test constructor_error(bits;codebooks=missing)=="ArgumentError: codebook bit missing from component"
+        repeated_missing=AbstractCodebook[remap_book(:a,[absent]),remap_book(:b,[absent])]
+        @test constructor_error(bits;codebooks=repeated_missing)=="ArgumentError: overlapping codebooks"
+        duplicate_variables=AbstractCodebook[remap_book(:a,identities),remap_book(:a,[absent])]
+        @test constructor_error(bits;codebooks=duplicate_variables)=="ArgumentError: duplicate codebook variable"
+        @test constructor_error(bits;linear=[(0,1)],codebooks=duplicate_variables)=="ArgumentError: linear index out of bounds"
+        visited=Ref(false)
+        linear=((visited[]=true;(0,1)) for _ in 1:1)
+        @test constructor_error([bits;bits[1]];linear)=="ArgumentError: duplicate bit identity"
+        @test !visited[]
+    end
+end
+
 @testitem "Owned exact energy accumulators preserve polynomials and retained capacity" tags=[:q1] begin
     using SparseArrays
     function ordinary_exact_value(q,z)

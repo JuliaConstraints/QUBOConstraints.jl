@@ -3,6 +3,14 @@ using Random
 using SparseArrays
 const VG = QC.ValuePairGuidance
 
+function _fixture_bit_order(identities, parameters)
+    order = get(parameters, "input_order", "reversed")
+    order == "reversed" && return reverse(identities)
+    order == "canonical" && return sort!(copy(identities))
+    order == "shuffled" && return shuffle(MersenneTwister(41), identities)
+    throw(ArgumentError("unknown fixture bit order"))
+end
+
 "Deep-copy bit storage while preserving repeated-array, reshape and view relationships."
 function bit_storage_copy_case(parameters)
     n=get(parameters,"bits",128)
@@ -28,11 +36,12 @@ function rational_component_case(parameters)
     n>=0 || throw(ArgumentError("nonnegative rational fixture width required"))
     dense=get(parameters,"dense",false)
     T=Rational{BigInt}
-    bits=reverse([QC.BitID(:rational,i) for i in 1:n])
+    bits=_fixture_bit_order([QC.BitID(:rational,i) for i in 1:n],parameters)
     linear=[(i,T((mod(i,7)-3)//3)) for i in 1:n]
     quadratic=dense ? [(i,j,T((mod(i+j,7)-3)//5)) for j in 1:n for i in 1:j] :
         [(i,i+1,T(2//5)) for i in 1:n-1]
     append!(quadratic,[(i,i,T(-1//3)) for i in 1:n])
+    positions=Dict(bit=>i for (i,bit) in enumerate(bits))
     prepare=()->(;bits,linear,quadratic)
     operation=s->QC.QUBOComponent{Rational{BigInt}}(s.bits;linear=s.linear,quadratic=s.quadratic,offset=2)
     verify=(s,q)->begin
@@ -40,7 +49,7 @@ function rational_component_case(parameters)
             original=[pattern(i) for i in 1:n]
             expected=T(2)+sum(v*original[i] for (i,v) in s.linear;init=zero(T))+
                 sum(v*original[i]*original[j] for (i,j,v) in s.quadratic;init=zero(T))
-            QC.energy(q,reverse(original))==expected || return false
+            QC.energy(q,[original[positions[bit]] for bit in q.bits])==expected || return false
         end
         true
     end
@@ -165,11 +174,12 @@ function component_construction_case(parameters)
     n = get(parameters, "bits", 128)
     n > 1 || throw(ArgumentError("at least two fixture bits required"))
     T = get(parameters, "coefficient_type", "float") == "exact" ? BigInt : Float64
-    bits = reverse([QC.BitID(:x, i) for i in 1:n])
+    bits = _fixture_bit_order([QC.BitID(:x, i) for i in 1:n], parameters)
     linear = [(i, T(mod(i, 7) - 3)) for i in 1:n]
     quadratic = [(i, i + 1, T(2)) for i in 1:n-1]
     append!(quadratic, [(i + 1, i, T(-1)) for i in 1:n-1])
     append!(quadratic, [(i, i, T(1)) for i in 1:n])
+    positions = Dict(bit => i for (i, bit) in enumerate(bits))
     prepare = () -> (; bits, linear, quadratic)
     operation = if T === BigInt
         state -> QC.QUBOComponent{BigInt}(state.bits; linear=state.linear, quadratic=state.quadratic, offset=2)
@@ -179,7 +189,7 @@ function component_construction_case(parameters)
     verify = (state, q) -> begin
         for pattern in (i -> false, i -> true, isodd, i -> mod(i, 3) == 0)
             original = [pattern(i) for i in 1:n]
-            z = reverse(original)
+            z = [original[positions[bit]] for bit in q.bits]
             expected = T(2) + sum(v * original[i] for (i, v) in state.linear) +
                 sum(v * original[i] * original[j] for (i, j, v) in state.quadratic)
             QC.energy(q, z) == expected || return false
@@ -196,12 +206,13 @@ function component_codebook_case(parameters)
     T = get(parameters, "coefficient_type", "float") == "exact" ? BigInt : Float64
     books = QC.AbstractCodebook[isodd(i) ? QC.codebook(Symbol(:x, i), [-3, 5]) :
         QC.structured_codebook(Symbol(:x, i), [-3, 5]; encoding=:one_hot) for i in 1:count]
-    bits = reverse(QC.BitID[b for book in books for b in book.bits])
+    bits = _fixture_bit_order(QC.BitID[b for book in books for b in book.bits], parameters)
     n = length(bits)
     linear = [(i, T(mod(i, 7) - 3)) for i in 1:n]
     quadratic = [(i, i + 1, T(2)) for i in 1:n-1]
     append!(quadratic, [(i + 1, i, T(-1)) for i in 1:n-1])
     append!(quadratic, [(i, i, T(1)) for i in 1:n])
+    positions = Dict(bit => i for (i, bit) in enumerate(bits))
     prepare = () -> (; bits, linear, quadratic, books)
     operation = if T === BigInt
         state -> QC.QUBOComponent{BigInt}(state.bits; linear=state.linear,
@@ -213,7 +224,7 @@ function component_codebook_case(parameters)
     verify = (state, q) -> begin
         for pattern in (i -> false, i -> true, isodd, i -> mod(i, 3) == 0)
             original = [pattern(i) for i in 1:n]
-            z = [original[findfirst(==(bit), state.bits)] for bit in q.bits]
+            z = [original[positions[bit]] for bit in q.bits]
             expected = T(2) + sum(v * original[i] for (i, v) in state.linear) +
                 sum(v * original[i] * original[j] for (i, j, v) in state.quadratic)
             QC.energy(q, z) == expected || return false

@@ -410,6 +410,91 @@ source = "scenarios.jl"
 
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_construction_case"
+id = "construct_canonical_float_128"
+implementation = "canonical-vector-remap-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    bits = 128
+    coefficient_type = "float"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_construction_case"
+id = "construct_canonical_exact_128"
+implementation = "canonical-vector-remap-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    bits = 128
+    coefficient_type = "exact"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_codebook_case"
+id = "construct_canonical_mixed_books_float_64"
+implementation = "canonical-vector-remap-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    codebooks = 64
+    coefficient_type = "float"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_codebook_case"
+id = "construct_canonical_mixed_books_exact_64"
+implementation = "canonical-vector-remap-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    codebooks = 64
+    coefficient_type = "exact"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "rational_component_case"
+id = "construct_canonical_rational_sparse_64"
+implementation = "canonical-vector-remap-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    bits = 64
+    dense = false
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "rational_component_case"
+id = "construct_canonical_rational_dense_64"
+implementation = "canonical-vector-remap-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    bits = 64
+    dense = true
+
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "exact_energy_case"
 id = "exact_energy_growth_11"
 implementation = "owned-compact-bigint-energy-v1"
