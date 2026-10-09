@@ -659,3 +659,27 @@ source = "scenarios.jl"
     coefficient_type = "float"
     shape = "zero"
     raw_terms = 512
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "observable_offset_component_case"
+id = "construct_observable_offset_custom_conversion"
+implementation = "stable-native-offset-reuse-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    mode = "custom_conversion"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "observable_offset_component_case"
+id = "construct_observable_offset_metadata_callback"
+implementation = "stable-native-offset-reuse-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    mode = "metadata_callback"

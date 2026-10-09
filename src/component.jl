@@ -61,6 +61,8 @@ struct QUBOComponent{T<:Real}
             push!(ri, a); push!(cj, b); push!(vv, T(v))
         end
         all(isfinite, vv) || throw(ArgumentError("nonfinite coefficient"))
+        # Other offsets reconvert at final storage after metadata callbacks;
+        # only immutable native scalars can safely reuse this early value.
         converted_offset = T(offset)
         isfinite(converted_offset) || throw(ArgumentError("nonfinite coefficient"))
         perm = sortperm(eachindex(vv); by = k -> (cj[k], ri[k], vv[k]))
@@ -134,7 +136,10 @@ struct QUBOComponent{T<:Real}
             for b in ordered if b.role !== :primary)
         all(b -> b in keys(meanings), keys(auxiliary_meanings)) ||
             throw(ArgumentError("meaning assigned to an absent or primary bit"))
-        return new{T}(ordered, SparseVector(n, li, lv), matrix, converted_offset,
+        return new{T}(ordered, SparseVector(n, li, lv), matrix,
+            offset isa Union{Bool,Int8,Int16,Int32,Int64,Int128,
+                UInt8,UInt16,UInt32,UInt64,UInt128,Float16,Float32,Float64} ?
+                converted_offset : T(offset),
             books, meanings, String(applicability), String(provenance))
     end
 end

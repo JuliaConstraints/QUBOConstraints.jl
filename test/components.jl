@@ -920,3 +920,78 @@ end
         end
     end
 end
+
+@testitem "Offset conversion preserves observable second calls and mutable callback timing" tags=[:q1] begin
+    using SparseArrays
+
+struct ObservableOffset <: Real
+    calls::Base.RefValue{Int}
+    throw_second::Bool
+end
+function next_offset_value!(x::ObservableOffset)
+    x.calls[]+=1
+    x.throw_second && x.calls[]==2 && error("observable second offset conversion")
+    x.calls[]==1 ? 2 : 7
+end
+Base.Float64(x::ObservableOffset)=Float64(next_offset_value!(x))
+Base.BigInt(x::ObservableOffset)=BigInt(next_offset_value!(x))
+(::Type{Rational{BigInt}})(x::ObservableOffset)=Rational{BigInt}(next_offset_value!(x))
+struct OffsetMutationBook <: QUBOConstraints.AbstractCodebook
+    book::QUBOConstraints.Codebook
+    offset::BigInt
+    calls::Base.RefValue{Int}
+end
+function Base.deepcopy_internal(x::OffsetMutationBook,memo::IdDict)
+    x.calls[]+=1
+    Base.GMP.MPZ.add!(x.offset,x.offset,BigInt(5))
+    OffsetMutationBook(Base.deepcopy_internal(x.book,memo),Base.deepcopy_internal(x.offset,memo),Ref(x.calls[]))
+end
+function Base.getproperty(x::OffsetMutationBook,name::Symbol)
+    name in (:variable,:bits,:values,:codes,:encoding) ? getproperty(getfield(x,:book),name) : getfield(x,name)
+end
+struct OffsetMutationMetadata <: AbstractDict{QUBOConstraints.BitID,String}
+    offset::BigInt
+    calls::Base.RefValue{Int}
+end
+Base.length(::OffsetMutationMetadata)=0
+Base.iterate(::OffsetMutationMetadata)=nothing
+Base.keys(::OffsetMutationMetadata)=QUBOConstraints.BitID[]
+function Base.get(x::OffsetMutationMetadata,bit::QUBOConstraints.BitID,default)
+    x.calls[]+=1
+    Base.GMP.MPZ.add!(x.offset,x.offset,BigInt(5))
+    default
+end
+
+    for T in (Float64,BigInt,Rational{BigInt})
+        calls=Ref(0)
+        q=QUBOComponent{T}(BitID[];offset=ObservableOffset(calls,false))
+        @test q.offset==T(7)
+        @test calls[]==2
+        calls=Ref(0)
+        error_text=try QUBOComponent{T}(BitID[];offset=ObservableOffset(calls,true));"" catch e;sprint(showerror,e) end
+        @test occursin("observable second offset conversion",error_text)
+        @test calls[]==2
+        for stage in (:codebook,:metadata)
+            offset=BigInt(2);calls=Ref(0)
+            if stage===:codebook
+                book=codebook(:offset_callback,[0,1];encoding=:domain_wall)
+                q=QUBOComponent{T}(book.bits;offset,codebooks=[OffsetMutationBook(book,offset,calls)])
+                @test length(q.codebooks)==1 && q.codebooks[1].variable==book.variable && q.codebooks[1].bits==book.bits
+            else
+                bit=BitID(:offset_callback,1;role=:semantic_auxiliary)
+                q=QUBOComponent{T}([bit];offset,auxiliary_meanings=OffsetMutationMetadata(offset,calls))
+                @test q.auxiliary_meanings==Dict(bit=>"uninterpreted")
+            end
+            @test q.offset==T(7)
+            @test offset==7 && calls[]==1
+            T===BigInt && @test q.offset===offset
+        end
+        for raw in (true,Int8(2),Int16(2),Int32(2),Int64(2),Int128(2),
+                UInt8(2),UInt16(2),UInt32(2),UInt64(2),UInt128(2),
+                Float16(2),Float32(2),Float64(2))
+            q=QUBOComponent{T}(BitID[];offset=raw)
+            @test q.offset==T(raw)
+            @test energy(q,Bool[])==T(raw)
+        end
+    end
+end

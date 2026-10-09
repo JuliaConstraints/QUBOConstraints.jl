@@ -483,3 +483,57 @@ function raw_coordinate_component_case(parameters)
     end
     (;prepare,operation,verify)
 end
+
+struct _ObservableFixtureOffset <: Real
+    calls::Base.RefValue{Int}
+end
+function Base.Float64(x::_ObservableFixtureOffset)
+    x.calls[]+=1
+    x.calls[]==1 ? 2.0 : 7.0
+end
+struct _MutableOffsetFixtureMetadata <: AbstractDict{QC.BitID,String}
+    offset::BigInt
+    calls::Base.RefValue{Int}
+end
+Base.length(::_MutableOffsetFixtureMetadata)=0
+Base.iterate(::_MutableOffsetFixtureMetadata)=nothing
+Base.keys(::_MutableOffsetFixtureMetadata)=QC.BitID[]
+function Base.get(x::_MutableOffsetFixtureMetadata,bit::QC.BitID,default)
+    x.calls[]+=1
+    Base.GMP.MPZ.add!(x.offset,x.offset,BigInt(5))
+    default
+end
+
+"Complete constructor preserving observable generic offset conversion and metadata callback timing."
+function observable_offset_component_case(parameters)
+    mode=get(parameters,"mode","custom_conversion")
+    mode in ("custom_conversion","metadata_callback") || throw(ArgumentError("unknown observable offset fixture mode"))
+    calls=Ref(0)
+    if mode=="custom_conversion"
+        bits=QC.BitID[]
+        offset=_ObservableFixtureOffset(calls)
+        state=(;bits,offset,calls)
+        operation=s->begin
+            s.calls[]=0
+            QC.QUBOComponent{Float64}(s.bits;offset=s.offset)
+        end
+        verify=(s,q)->s.calls[]==2 && q.offset==7.0 && isempty(q.bits) &&
+            QC.energy(q,Bool[])==7.0
+    else
+        bit=QC.BitID(:observable_offset,1;role=:semantic_auxiliary)
+        bits=[bit];offset=BigInt(2);initial=BigInt(2)
+        metadata=_MutableOffsetFixtureMetadata(offset,calls)
+        state=(;bits,offset,initial,calls,metadata)
+        operation=s->begin
+            s.calls[]=0
+            Base.GMP.MPZ.set!(s.offset,s.initial)
+            QC.QUBOComponent{Float64}(s.bits;offset=s.offset,auxiliary_meanings=s.metadata)
+        end
+        verify=(s,q)->s.calls[]==1 && s.offset==7 && s.initial==2 &&
+            q.offset==7.0 && q.bits==s.bits && q.bits!==s.bits &&
+            q.auxiliary_meanings==Dict(s.bits[1]=>"uninterpreted") &&
+            QC.energy(q,[false])==7.0
+    end
+    prepare=()->state
+    (;prepare,operation,verify)
+end
