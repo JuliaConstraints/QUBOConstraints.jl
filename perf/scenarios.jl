@@ -446,3 +446,40 @@ function exact_energy_case(parameters)
     end
     (; prepare, operation, verify)
 end
+
+"Complete construction for dense and long repeated, cancelling or zero raw coordinate lists."
+function raw_coordinate_component_case(parameters)
+    n=get(parameters,"bits",2)
+    n>0 || throw(ArgumentError("positive raw coordinate fixture width required"))
+    shape=get(parameters,"shape","repeated")
+    shape in ("dense","repeated","cancelled","zero") || throw(ArgumentError("unknown raw coordinate shape"))
+    kind=get(parameters,"coefficient_type","float")
+    T=kind=="float" ? Float64 : kind=="exact" ? BigInt : kind=="rational" ? Rational{BigInt} :
+        throw(ArgumentError("unknown raw coordinate coefficient type"))
+    coefficient(v)=T===Rational{BigInt} ? T(v//5) : T(v)
+    bits=_fixture_bit_order([QC.BitID(:raw_coordinate,i) for i in 1:n],parameters)
+    count=get(parameters,"raw_terms",512)
+    count>=0 || throw(ArgumentError("nonnegative raw term count required"))
+    linear=shape=="dense" ? [(i,coefficient(mod(i,7)-3)) for i in 1:n] :
+        [(1,coefficient(shape=="zero" ? 0 : shape=="cancelled" && iseven(i) ? -1 : 1)) for i in 1:count]
+    quadratic=shape=="dense" ? [(i,j,coefficient(mod(i+j,7)-3)) for j in 1:n for i in 1:j] :
+        [(1,1,coefficient(shape=="zero" ? 0 : shape=="cancelled" && iseven(i) ? -1 : 1)) for i in 1:count]
+    positions=Dict(bit=>i for (i,bit) in enumerate(bits))
+    snapshot=deepcopy((bits,linear,quadratic))
+    state=(;bits,linear,quadratic)
+    prepare=()->state
+    operation=kind=="float" ? s->QC.QUBOComponent{Float64}(s.bits;linear=s.linear,quadratic=s.quadratic,offset=2) :
+        kind=="exact" ? s->QC.QUBOComponent{BigInt}(s.bits;linear=s.linear,quadratic=s.quadratic,offset=2) :
+        s->QC.QUBOComponent{Rational{BigInt}}(s.bits;linear=s.linear,quadratic=s.quadratic,offset=2)
+    verify=(s,q)->begin
+        (s.bits,s.linear,s.quadratic)==snapshot && q.bits!==s.bits && q.bits==sort(s.bits) || return false
+        for pattern in (i->false,i->true,isodd,i->mod(i,3)==0)
+            original=[pattern(i) for i in 1:n]
+            expected=T(2)+sum(v*original[i] for (i,v) in s.linear;init=zero(T))+
+                sum(v*original[i]*original[j] for (i,j,v) in s.quadratic;init=zero(T))
+            QC.energy(q,[original[positions[bit]] for bit in q.bits])==expected || return false
+        end
+        true
+    end
+    (;prepare,operation,verify)
+end

@@ -40,6 +40,17 @@ struct QUBOComponent{T<:Real}
             Dict(b => i for (i, b) in enumerate(ordered))
         remap = canonical ? collect(Base.OneTo(n)) : [positions[b] for b in bits]
         ri, cj, vv = Int[], Int[], T[]
+        # Reserve only proportionate vector inputs. Longer or unknown iterables
+        # retain ordinary growth without assuming their canonical term count.
+        if linear isa Vector && quadratic isa Vector &&
+                length(linear) <= n && length(quadratic) <= 3n
+            capacity = length(linear) + length(quadratic)
+            if capacity > 0
+                sizehint!(ri, capacity)
+                sizehint!(cj, capacity)
+                sizehint!(vv, capacity)
+            end
+        end
         for (i, v) in linear
             1 <= i <= n || throw(ArgumentError("linear index out of bounds"))
             push!(ri, remap[i]); push!(cj, remap[i]); push!(vv, T(v))

@@ -862,3 +862,61 @@ end
         @test q.linear.nzval[9]==huge && q.linear.nzval[10]==-huge
     end
 end
+
+@testitem "Proportionate coordinate buffers preserve raw-term polynomials and iterable inputs" tags=[:q1] begin
+    using SparseArrays
+    for T in (Float64,BigInt,Rational{BigInt}),n in (0,1,2,8,32),order in (:canonical,:reversed)
+        coefficient(v)=T===Rational{BigInt} ? T(v//5) : T(v)
+        identities=[BitID(:coordinate_capacity,i) for i in 1:n]
+        bits=order===:canonical ? identities : reverse(identities)
+        for shape in (:proportionate,:linear_boundary,:quadratic_boundary,:dense,:repeated,:cancelled,:zero)
+            n==0 && shape!==:proportionate && continue
+            linear=shape===:linear_boundary ? [(mod1(i,n),coefficient(mod(i,5)-2)) for i in 1:n+1] :
+                shape in (:repeated,:cancelled,:zero) ? [(1,coefficient(shape===:zero ? 0 : shape===:cancelled && iseven(i) ? -1 : 1)) for i in 1:257] :
+                [(i,coefficient(mod(i,7)-3)) for i in 1:n]
+            quadratic=shape===:dense ? [(i,j,coefficient(mod(i+j,7)-3)) for j in 1:n for i in 1:j] :
+                shape===:quadratic_boundary ? [(mod1(i,n),mod1(i+1,n),coefficient(mod(i,5)-2)) for i in 1:3n+1] :
+                shape in (:repeated,:cancelled,:zero) ? [(1,1,coefficient(shape===:zero ? 0 : shape===:cancelled && iseven(i) ? -1 : 1)) for i in 1:257] :
+                [(mod1(i,n),mod1(i+1,n),coefficient(mod(i,5)-2)) for i in 1:3n]
+            snapshot=deepcopy((bits,linear,quadratic))
+            baseline=QUBOComponent{T}(bits;linear,quadratic,offset=2,applicability="capacity",provenance="raw terms")
+            for form in (:vector,:view,:generator)
+                input_linear=form===:vector ? linear : form===:view ? view(linear,:) : (term for term in linear)
+                input_quadratic=form===:vector ? quadratic : form===:view ? view(quadratic,:) : (term for term in quadratic)
+                q=QUBOComponent{T}(bits;linear=input_linear,quadratic=input_quadratic,offset=2,applicability="capacity",provenance="raw terms")
+                @test q.bits==sort(bits) && q.bits!==bits
+                @test q.linear==baseline.linear && q.quadratic==baseline.quadratic && q.offset==baseline.offset
+                @test q.applicability=="capacity" && q.provenance=="raw terms" && isempty(q.codebooks)
+                @test q.linear!==baseline.linear && q.quadratic!==baseline.quadratic
+                position=Dict(bit=>i for (i,bit) in enumerate(bits))
+                for pattern in (i->false,i->true,isodd,i->mod(i,3)==0)
+                    original=[pattern(i) for i in 1:n]
+                    ordered=[original[position[bit]] for bit in q.bits]
+                    expected=T(2)+sum(v*original[i] for (i,v) in linear;init=zero(T))+
+                        sum(v*original[i]*original[j] for (i,j,v) in quadratic;init=zero(T))
+                    @test energy(q,ordered)==expected
+                end
+                @test (bits,linear,quadratic)==snapshot
+                if n>0
+                    q.bits[1]=BitID(:changed_coordinate,1)
+                    @test bits==snapshot[1] && baseline.bits==sort(snapshot[1])
+                end
+            end
+        end
+    end
+    for T in (Float64,BigInt,Rational{BigInt}),n in (1,2,8),form in (:vector,:generator)
+        bits=[BitID(:coordinate_guard,i) for i in 1:n]
+        badlinear=[(n+1,1)]
+        badquadratic=[(1,n+1,1)]
+        linear=form===:vector ? badlinear : (term for term in badlinear)
+        quadratic=form===:vector ? badquadratic : (term for term in badquadratic)
+        error=try QUBOComponent{T}(bits;linear,offset=Ref(0));nothing catch e;e end
+        @test error isa ArgumentError && error.msg=="linear index out of bounds"
+        error=try QUBOComponent{T}(bits;quadratic,offset=Ref(0));nothing catch e;e end
+        @test error isa ArgumentError && error.msg=="quadratic index out of bounds"
+        if T===Float64
+            error=try QUBOComponent{T}(bits;linear=[(1,Inf)],offset=Ref(0));nothing catch e;e end
+            @test error isa ArgumentError && error.msg=="nonfinite coefficient"
+        end
+    end
+end

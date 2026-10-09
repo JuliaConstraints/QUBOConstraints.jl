@@ -579,3 +579,83 @@ source = "scenarios.jl"
     growth_precision_bits = 8192
     input_type = "boolean"
     pattern = "one"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "raw_coordinate_component_case"
+id = "construct_raw_coordinates_dense_float_16"
+implementation = "proportionate-vector-coordinate-capacity-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    bits = 16
+    coefficient_type = "float"
+    shape = "dense"
+    raw_terms = 0
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "raw_coordinate_component_case"
+id = "construct_raw_coordinates_repeated_float_2"
+implementation = "proportionate-vector-coordinate-capacity-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    bits = 2
+    coefficient_type = "float"
+    shape = "repeated"
+    raw_terms = 4096
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "raw_coordinate_component_case"
+id = "construct_raw_coordinates_repeated_exact_2"
+implementation = "proportionate-vector-coordinate-capacity-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    bits = 2
+    coefficient_type = "exact"
+    shape = "repeated"
+    raw_terms = 4096
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "raw_coordinate_component_case"
+id = "construct_raw_coordinates_cancelled_rational_2"
+implementation = "proportionate-vector-coordinate-capacity-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    bits = 2
+    coefficient_type = "rational"
+    shape = "cancelled"
+    raw_terms = 512
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "raw_coordinate_component_case"
+id = "construct_raw_coordinates_zero_float_8"
+implementation = "proportionate-vector-coordinate-capacity-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    input_order = "canonical"
+    bits = 8
+    coefficient_type = "float"
+    shape = "zero"
+    raw_terms = 512
