@@ -447,3 +447,46 @@ end
     owned_cycle=deepcopy(cycle)
     @test owned_cycle[2]===owned_cycle && owned_cycle[1]!==bits && owned_cycle[1]==bits
 end
+
+@testitem "Canonical identity guard preserves rejection and caller ownership" tags=[:q1] begin
+    for T in (Float64,BigInt,Rational{BigInt}), n in (2,3,8,64),
+            placement in (:start,:middle,:end), shape in (:vector,:strided)
+        unique_bits=[BitID(Symbol(:guard_owner,mod(i,3)),i;
+            role=isodd(i) ? :primary : :semantic_auxiliary) for i in 1:n]
+        duplicate=placement===:start ? unique_bits[end] :
+            placement===:middle ? unique_bits[1] : unique_bits[div(n,2)]
+        input=reverse(unique_bits)
+        position=placement===:start ? 1 : placement===:middle ? div(n,2)+1 : n+1
+        insert!(input,position,duplicate)
+        storage=shape===:vector ? copy(input) : [BitID(:guard_padding,i) for i in 1:2length(input)+2]
+        bits=if shape===:vector
+            storage
+        else
+            storage[2:2:2length(input)]=input
+            view(storage,2:2:2length(input))
+        end
+        before=copy(storage)
+        @test length(Set(bits))==length(bits)-1
+        visited=Ref(false)
+        linear=((visited[]=true; (0,1)) for _ in 1:1)
+        @test_throws ArgumentError QUBOComponent{T}(bits;linear)
+        @test !visited[] && storage==before
+    end
+    # Owner and role are part of the identity even when indices agree.
+    identities=[BitID(:a,1),BitID(:b,1),
+        BitID(:a,1;role=:semantic_auxiliary),
+        BitID(:a,1;role=:quadratization_auxiliary)]
+    for T in (Float64,BigInt,Rational{BigInt}), permutation in
+            ([1,2,3,4],[4,3,2,1],[2,4,1,3])
+        input=identities[permutation]
+        snapshot=copy(input)
+        q=QUBOComponent{T}(input;linear=[(i,i) for i in eachindex(input)])
+        @test q.bits==sort(identities) && input==snapshot && q.bits!==input
+        @test length(Set(q.bits))==length(input)
+        for pattern in (i->false,i->true,isodd)
+            assignment=[pattern(i) for i in eachindex(input)]
+            ordered=[assignment[findfirst(==(bit),input)] for bit in q.bits]
+            @test energy(q,ordered)==sum(i*assignment[i] for i in eachindex(input))
+        end
+    end
+end

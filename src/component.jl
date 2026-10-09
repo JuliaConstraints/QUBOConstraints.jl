@@ -21,8 +21,11 @@ struct QUBOComponent{T<:Real}
             provenance = "unspecified") where {T<:Real}
         T in (BigInt, Rational{BigInt}, Float64) || throw(ArgumentError(
             "supported coefficients: BigInt, Rational{BigInt}, Float64"))
-        allunique(bits) || throw(ArgumentError("duplicate bit identity"))
         ordered = sort!(collect(bits))
+        # Equal immutable identities are adjacent in the canonical order.
+        # Check the owned sorted buffer instead of allocating a hash set.
+        all(i -> ordered[i-1] != ordered[i], 2:length(ordered)) ||
+            throw(ArgumentError("duplicate bit identity"))
         positions = Dict(b => i for (i, b) in enumerate(ordered))
         remap = [positions[b] for b in bits]
         n = length(bits)
