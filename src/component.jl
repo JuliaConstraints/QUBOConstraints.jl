@@ -72,8 +72,22 @@ struct QUBOComponent{T<:Real}
         for book in books
             _append_codebook_bits!(covered, book)
         end
-        allunique(covered) || throw(ArgumentError("overlapping codebooks"))
-        all(b -> haskey(positions, b), covered) || throw(ArgumentError("codebook bit missing from component"))
+        # Canonical positions bijectively identify the covered bits. Larger
+        # valid lists can retain integer keys; small or missing-bit lists keep
+        # the original overlap-before-missing validation.
+        if length(covered) >= 128 && all(b -> haskey(positions, b), covered)
+            seen = Set{Int}()
+            sizehint!(seen, min(length(covered), length(positions)))
+            for b in covered
+                position = positions[b]
+                position in seen && throw(ArgumentError("overlapping codebooks"))
+                push!(seen, position)
+            end
+        else
+            allunique(covered) || throw(ArgumentError("overlapping codebooks"))
+            all(b -> haskey(positions, b), covered) ||
+                throw(ArgumentError("codebook bit missing from component"))
+        end
         meanings = Dict{BitID,String}(b => get(auxiliary_meanings, b, "uninterpreted")
             for b in ordered if b.role !== :primary)
         all(b -> b in keys(meanings), keys(auxiliary_meanings)) ||

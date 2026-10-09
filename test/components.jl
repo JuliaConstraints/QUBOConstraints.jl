@@ -490,3 +490,73 @@ end
         end
     end
 end
+
+@testitem "Indexed codebook coverage preserves ownership and validation priority" tags=[:q1] begin
+    function coverage_book(variable,bits)
+        n=length(bits)
+        n==0 && return Codebook(variable,bits,[0],falses(0,1),[1])
+        return Codebook(variable,bits,[-1,1],hcat(falses(n),trues(n)),[1,2])
+    end
+    for T in (Float64,BigInt,Rational{BigInt}), n in (0,1,2,16,127,128,129,512)
+        coefficient(v)=T===Rational{BigInt} ? T(v//3) : T(v)
+        identities=[BitID(:covered,i) for i in 1:n]
+        bits=reverse(identities)
+        split=cld(n,2)
+        books=AbstractCodebook[coverage_book(:left,identities[1:split]),
+            coverage_book(:right,identities[split+1:n])]
+        snapshot=copy(bits)
+        linear=[(i,coefficient(mod(i,7)-3)) for i in 1:n]
+        quadratic=[(i,i+1,coefficient(2)) for i in 1:n-1]
+        q=QUBOComponent{T}(bits;linear,quadratic,offset=2,codebooks=books)
+        @test q.bits==identities && q.bits!==bits && bits==snapshot
+        @test all(zip(q.codebooks,books)) do (owned,input)
+            owned.variable==input.variable && owned.bits==input.bits &&
+                owned.bits!==input.bits && owned.values==input.values &&
+                owned.values!==input.values && owned.codes==input.codes &&
+                owned.codes!==input.codes
+        end
+        source_positions=Dict(bit=>i for (i,bit) in enumerate(bits))
+        for pattern in (i->false,i->true,isodd,i->mod(i,3)==0)
+            original=[pattern(i) for i in 1:n]
+            ordered=[original[source_positions[bit]] for bit in q.bits]
+            value=T(2)+sum(v*original[i] for (i,v) in linear;init=zero(T))+
+                sum(v*original[i]*original[j] for (i,j,v) in quadratic;init=zero(T))
+            @test energy(q,ordered)==value
+        end
+        if n>0
+            artifact=component_artifact(q)
+            books[1].bits[1]=BitID(:changed_coverage_input,1)
+            @test component_artifact(q)==artifact
+        end
+        n>=2 || continue
+        outside=BitID(:absent_coverage,1)
+        fixtures=[
+            ("overlapping codebooks",AbstractCodebook[
+                coverage_book(:first,identities[1:split]),
+                coverage_book(:second,identities[split:n])]),
+            ("codebook bit missing from component",AbstractCodebook[
+                coverage_book(:first,identities[1:n-1]),
+                coverage_book(:second,[outside])]),
+            ("overlapping codebooks",AbstractCodebook[
+                coverage_book(:first,identities),
+                coverage_book(:second,[identities[1],outside])]),
+            ("overlapping codebooks",AbstractCodebook[
+                coverage_book(:first,identities),
+                coverage_book(:second,[outside]),coverage_book(:third,[outside])]),
+            ("duplicate codebook variable",AbstractCodebook[
+                coverage_book(:same,identities[1:split]),
+                coverage_book(:same,identities[split+1:n])])]
+        for (message,invalid_books) in fixtures
+            original_books=deepcopy([book.bits for book in invalid_books])
+            error=try
+                QUBOComponent{T}(bits;codebooks=invalid_books)
+                nothing
+            catch exception
+                exception
+            end
+            @test error isa ArgumentError
+            @test sprint(showerror,error)=="ArgumentError: "*message
+            @test bits==snapshot && [book.bits for book in invalid_books]==original_books
+        end
+    end
+end
