@@ -1,5 +1,6 @@
 import QUBOConstraints as QC
 using Random
+using SparseArrays
 const VG = QC.ValuePairGuidance
 
 "Deep-copy bit storage while preserving repeated-array, reshape and view relationships."
@@ -346,5 +347,53 @@ function numeric_energy_case(parameters)
     end
     verify = (state, result) -> result == sum(Float64(mod(i, 7) - 3) * state.z[i] for i in 1:n) +
         sum(0.25 * state.z[i] * state.z[i + 1] for i in 1:n-1)
+    (; prepare, operation, verify)
+end
+
+"Exact scalar energy, with independent input polynomials and GMP limb-capacity controls."
+function exact_energy_case(parameters)
+    n = get(parameters, "bits", 128)
+    precision = get(parameters, "precision_bits", 0)
+    growth_precision = get(parameters, "growth_precision_bits", 0)
+    kind = get(parameters, "input_type", "boolean")
+    pattern = get(parameters, "pattern", "one")
+    n >= 0 && precision >= 0 && growth_precision >= 0 || throw(ArgumentError("nonnegative fixture sizes required"))
+    kind in ("boolean", "integer") || throw(ArgumentError("unknown binary input type"))
+    pattern in ("zero", "one", "odd") || throw(ArgumentError("unknown binary pattern"))
+    huge = big(2)^precision
+    second_huge = growth_precision > 0 ? big(2)^growth_precision : -huge
+    linear = precision == 0 ? [(i, BigInt(mod(i, 7) - 3)) for i in 1:n] :
+        [(i, i == 9 ? huge : i == 10 ? second_huge : BigInt(1)) for i in 1:n]
+    quadratic = precision == 0 ? [(i, i + 1, BigInt(1)) for i in 1:n-1] :
+        Tuple{Int,Int,BigInt}[]
+    q = QC.QUBOComponent([QC.BitID(:exact_energy_fixture, i) for i in 1:n];
+        linear, quadratic, offset=2)
+    flags = pattern == "zero" ? falses(n) : pattern == "one" ? trues(n) : isodd.(1:n)
+    z = kind == "boolean" ? flags : Int.(flags)
+    before = deepcopy((q.offset, nonzeros(q.linear), nonzeros(q.quadratic)))
+    z_before = copy(z)
+    prepare = () -> (; q, z)
+    operation = state -> QC.energy(state.q, state.z)
+    verify = (state, result) -> begin
+        expected = BigInt(2) + sum(v * BigInt(state.z[i]) for (i, v) in linear; init=BigInt(0)) +
+            sum(v * BigInt(state.z[i]) * BigInt(state.z[j]) for (i, j, v) in quadratic; init=BigInt(0))
+        result == expected || return false
+        (state.q.offset, nonzeros(state.q.linear), nonzeros(state.q.quadratic)) == before || return false
+        state.z == z_before || return false
+        # Ordinary non-mutating arithmetic supplies the retention baseline;
+        # its order follows canonical sparse storage, while value checks above
+        # evaluate the independent original input polynomial.
+        ordinary = state.q.offset
+        for p in eachindex(nonzeros(state.q.linear))
+            state.z[state.q.linear.nzind[p]] == 1 && (ordinary += nonzeros(state.q.linear)[p])
+        end
+        for j in axes(state.q.quadratic, 2), p in nzrange(state.q.quadratic, j)
+            state.z[j] == 1 && state.z[rowvals(state.q.quadratic)[p]] == 1 &&
+                (ordinary += nonzeros(state.q.quadratic)[p])
+        end
+        result.alloc <= ordinary.alloc && Base.summarysize(result) <= Base.summarysize(ordinary) || return false
+        pattern == "zero" && result !== state.q.offset && return false
+        true
+    end
     (; prepare, operation, verify)
 end

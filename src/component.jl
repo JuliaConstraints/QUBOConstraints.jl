@@ -135,6 +135,63 @@ function _energy(q::QUBOComponent, z)
     return value
 end
 
+# BigInt addition normally creates a fresh integer for every selected term.
+# The first additions establish an owned accumulator; only that value mutates.
+# Two pending terms preserve ordinary arithmetic for short sums.
+# Compact its final value so cancellation does not retain peak limb capacity.
+function _energy(q::QUBOComponent{BigInt}, z)
+    nnz(q.linear) + nnz(q.quadratic) <= 10 &&
+        return invoke(_energy, Tuple{QUBOComponent,Any}, q, z)
+    value = q.offset
+    pending = q.offset
+    second_pending = q.offset
+    selected = 0
+    for p in eachindex(nonzeros(q.linear))
+        z[q.linear.nzind[p]] == 1 || continue
+        selected += 1
+        if selected <= 8
+            value += nonzeros(q.linear)[p]
+        elseif selected == 9
+            pending = nonzeros(q.linear)[p]
+        elseif selected == 10
+            second_pending = nonzeros(q.linear)[p]
+        else
+            if selected == 11
+                Base.GMP.MPZ.add!(value, value, pending)
+                Base.GMP.MPZ.add!(value, value, second_pending)
+            end
+            Base.GMP.MPZ.add!(value, value, nonzeros(q.linear)[p])
+        end
+    end
+    for j in axes(q.quadratic, 2)
+        z[j] == 1 || continue
+        for p in nzrange(q.quadratic, j)
+            z[rowvals(q.quadratic)[p]] == 1 || continue
+            selected += 1
+            if selected <= 8
+                value += nonzeros(q.quadratic)[p]
+            elseif selected == 9
+                pending = nonzeros(q.quadratic)[p]
+            elseif selected == 10
+                second_pending = nonzeros(q.quadratic)[p]
+            else
+                if selected == 11
+                    Base.GMP.MPZ.add!(value, value, pending)
+                    Base.GMP.MPZ.add!(value, value, second_pending)
+                end
+                Base.GMP.MPZ.add!(value, value, nonzeros(q.quadratic)[p])
+            end
+        end
+    end
+    selected == 9 && return value + pending
+    selected == 10 && return value + pending + second_pending
+    if selected >= 11
+        result = BigInt(nbits = Base.GMP.BITS_PER_LIMB * abs(Int(value.size)))
+        return Base.GMP.MPZ.set!(result, value)
+    end
+    return value
+end
+
 function energy(q::QUBOComponent, z::AbstractVector{Bool})
     length(z) == length(q.bits) || throw(DimensionMismatch("wrong bit count"))
     return _energy(q, z)

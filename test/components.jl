@@ -645,3 +645,80 @@ end
         @test sprint(showerror,error)=="ArgumentError: duplicate codebook variable"
     end
 end
+
+@testitem "Owned exact energy accumulators preserve polynomials and retained capacity" tags=[:q1] begin
+    using SparseArrays
+    function ordinary_exact_value(q,z)
+        value=q.offset
+        for p in eachindex(nonzeros(q.linear))
+            z[q.linear.nzind[p]]==1 && (value+=nonzeros(q.linear)[p])
+        end
+        for j in axes(q.quadratic,2),p in nzrange(q.quadratic,j)
+            z[j]==1 && z[rowvals(q.quadratic)[p]]==1 &&
+                (value+=nonzeros(q.quadratic)[p])
+        end
+        value
+    end
+    for n in (0,1,2,4,8,9,10,16,64), precision in (0,4096), shape in (:linear,:mixed)
+        huge=big(2)^precision
+        bits=reverse([BitID(:exact_energy,i;role=mod(i,3)==0 ? :semantic_auxiliary : :primary) for i in 1:n])
+        linear=precision==0 ? [(i,BigInt(mod(i,7)-3)) for i in 1:n] :
+            [(i,i==9 ? huge : i==10 ? -huge : BigInt(1)) for i in 1:n]
+        quadratic=shape===:linear ? Tuple{Int,Int,BigInt}[] :
+            [(i,i+1,BigInt(2)) for i in 1:n-1]
+        if shape===:mixed
+            append!(quadratic,[(i+1,i,BigInt(-1)) for i in 1:n-1])
+            append!(quadratic,[(i,i,BigInt(1)) for i in 1:n])
+        end
+        q=QUBOComponent(bits;linear,quadratic,offset=2)
+        snapshot=deepcopy((q.offset,nonzeros(q.linear),nonzeros(q.quadratic),q.bits))
+        positions=Dict(bit=>i for (i,bit) in enumerate(bits))
+        for pattern in (i->false,i->true,isodd,i->mod(i,3)==0)
+            original=[pattern(i) for i in 1:n]
+            ordered=[original[positions[bit]] for bit in q.bits]
+            expected=BigInt(2)+sum(v*BigInt(original[i]) for (i,v) in linear;init=BigInt(0))+
+                sum(v*BigInt(original[i])*BigInt(original[j]) for (i,j,v) in quadratic;init=BigInt(0))
+            for kind in (:bool,:integer,:float,:big,:mixed,:view)
+                input=kind===:bool ? copy(ordered) : kind===:integer ? Int.(ordered) :
+                    kind===:float ? Float64.(ordered) : kind===:big ? BigInt.(ordered) :
+                    kind===:mixed ? Any[isodd(i) ? Int(ordered[i]) : Float64(ordered[i]) for i in 1:n] :
+                    view(UInt8.(ordered),1:n)
+                input_snapshot=deepcopy(input)
+                ordinary=ordinary_exact_value(q,input)
+                result=energy(q,input)
+                @test result isa BigInt && result==expected
+                @test (q.offset,nonzeros(q.linear),nonzeros(q.quadratic),q.bits)==snapshot
+                @test input==input_snapshot
+                @test result.alloc<=ordinary.alloc && Base.summarysize(result)<=Base.summarysize(ordinary)
+                active=any(p->input[q.linear.nzind[p]]==1,eachindex(nonzeros(q.linear))) ||
+                    any(j->input[j]==1 && any(p->input[rowvals(q.quadratic)[p]]==1,nzrange(q.quadratic,j)),axes(q.quadratic,2))
+                if active
+                    @test result!==q.offset && all(v->result!==v,[nonzeros(q.linear);nonzeros(q.quadratic)])
+                    Base.GMP.MPZ.add!(result,result,BigInt(1))
+                    @test (q.offset,nonzeros(q.linear),nonzeros(q.quadratic),q.bits)==snapshot && input==input_snapshot
+                else
+                    @test result===q.offset
+                end
+            end
+        end
+        @test_throws DimensionMismatch energy(q,falses(n+1))
+        if n>0
+            for value in (0.5,NaN,Inf,-Inf)
+                invalid=zeros(Float64,n);invalid[1]=value
+                @test_throws ArgumentError energy(q,invalid)
+            end
+            @test (q.offset,nonzeros(q.linear),nonzeros(q.quadratic),q.bits)==snapshot
+        end
+    end
+    # Explicit small final value after a large peak beyond the ordinary prefix.
+    for precision in (256,4096,16384)
+        huge=big(2)^precision
+        q=QUBOComponent([BitID(:peak,i) for i in 1:16];
+            linear=[(i,i==9 ? huge : i==10 ? -huge : BigInt(1)) for i in 1:16])
+        result=energy(q,trues(16));ordinary=ordinary_exact_value(q,trues(16))
+        @test result==14
+        @test result.alloc<=ordinary.alloc
+        @test Base.summarysize(result)<=Base.summarysize(ordinary)
+        @test q.linear.nzval[9]==huge && q.linear.nzval[10]==-huge
+    end
+end
