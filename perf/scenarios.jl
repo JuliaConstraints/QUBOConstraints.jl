@@ -361,6 +361,44 @@ function numeric_energy_case(parameters)
     (; prepare, operation, verify)
 end
 
+"Construction controls for validated offset conversion, excluding prepared inputs."
+function component_offset_case(parameters)
+    n = get(parameters, "bits", 0)
+    kind = get(parameters, "coefficient_type", "exact")
+    offset_kind = get(parameters, "offset_kind", "integer")
+    n >= 0 || throw(ArgumentError("nonnegative offset fixture width required"))
+    kind in ("float", "exact", "rational") || throw(ArgumentError("unknown offset coefficient type"))
+    offset_kind in ("integer", "integral_float", "already_typed") ||
+        throw(ArgumentError("unknown offset input type"))
+    T = kind == "float" ? Float64 : kind == "exact" ? BigInt : Rational{BigInt}
+    bits = [QC.BitID(:offset_fixture, i) for i in 1:n]
+    linear = [(i, T(mod(i, 7) - 3)) for i in 1:n]
+    quadratic = [(i, i + 1, T(1)) for i in 1:n-1]
+    offset = offset_kind == "integer" ? 2 : offset_kind == "integral_float" ? 2.0 : T(2)
+    before = deepcopy((bits, linear, quadratic, offset))
+    prepare = () -> (; bits, linear, quadratic, offset)
+    operation = if T === Float64
+        s -> QC.QUBOComponent{Float64}(s.bits; linear=s.linear, quadratic=s.quadratic, offset=s.offset)
+    elseif T === BigInt
+        s -> QC.QUBOComponent{BigInt}(s.bits; linear=s.linear, quadratic=s.quadratic, offset=s.offset)
+    else
+        s -> QC.QUBOComponent{Rational{BigInt}}(s.bits; linear=s.linear, quadratic=s.quadratic, offset=s.offset)
+    end
+    verify = (s, q) -> begin
+        (s.bits, s.linear, s.quadratic, s.offset) == before || return false
+        q.bits == s.bits && q.bits !== s.bits && q.offset == T(s.offset) || return false
+        for pattern in (i -> false, i -> true, isodd)
+            z = [pattern(i) for i in 1:n]
+            expected = T(s.offset) + sum(v*z[i] for (i,v) in s.linear; init=zero(T)) +
+                sum(v*z[i]*z[j] for (i,j,v) in s.quadratic; init=zero(T))
+            QC.energy(q, z) == expected || return false
+        end
+        offset_kind == "already_typed" && q.offset !== s.offset && return false
+        true
+    end
+    (; prepare, operation, verify)
+end
+
 "Exact scalar energy, with independent input polynomials and GMP limb-capacity controls."
 function exact_energy_case(parameters)
     n = get(parameters, "bits", 128)

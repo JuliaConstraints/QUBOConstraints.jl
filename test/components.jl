@@ -646,6 +646,62 @@ end
     end
 end
 
+@testitem "Validated offsets preserve values ownership and error priority" tags=[:q1] begin
+    for T in (Float64,BigInt,Rational{BigInt}),n in (0,1,2,16),
+            raw_offset in (0,2,2.0,big(2),2//1,big(2)//big(1))
+        bits=reverse([BitID(:offset_regression,i) for i in 1:n])
+        linear=[(i,T(mod(i,5)-2)) for i in 1:n]
+        quadratic=[(i,i+1,T(1)) for i in 1:n-1]
+        before=deepcopy((bits,linear,quadratic,raw_offset))
+        q=QUBOComponent{T}(bits;linear,quadratic,offset=raw_offset)
+        @test q.offset==T(raw_offset)
+        @test (bits,linear,quadratic,raw_offset)==before
+        @test q.bits==sort(bits) && q.bits!==bits
+        for pattern in (i->false,i->true,isodd)
+            input=[pattern(i) for i in 1:n]
+            expected=T(raw_offset)+sum(v*input[i] for (i,v) in linear;init=zero(T))+
+                sum(v*input[i]*input[j] for (i,j,v) in quadratic;init=zero(T))
+            @test energy(q,reverse(input))==expected
+        end
+        if raw_offset isa T
+            @test q.offset===raw_offset
+        end
+    end
+    for T in (Float64,BigInt,Rational{BigInt})
+        empty=QUBOComponent{T}(BitID[])
+        @test empty.offset==zero(T) && energy(empty,Bool[])==zero(T)
+    end
+    for T in (Float64,Rational{BigInt})
+        @test QUBOComponent{T}(BitID[];offset=2.5).offset==T(5//2)
+        for offset in (NaN,Inf,-Inf,1//0)
+            @test_throws ArgumentError QUBOComponent{T}(BitID[];offset)
+        end
+    end
+    for offset in (2.5,NaN,Inf,-Inf,1//0)
+        @test_throws InexactError QUBOComponent{BigInt}(BitID[];offset)
+    end
+    huge=big(2)^4096
+    for T in (BigInt,Rational{BigInt})
+        q=QUBOComponent{T}([BitID(:huge_offset,1)];linear=[(1,3)],offset=huge)
+        @test energy(q,[0])==huge && energy(q,[1])==huge+3
+        @test huge==big(2)^4096
+    end
+    function offset_error(bits;kwargs...)
+        try
+            QUBOComponent{Float64}(bits;kwargs...)
+            error("expected rejection")
+        catch e
+            sprint(showerror,e)
+        end
+    end
+    bits=[BitID(:offset_guard,1)]
+    @test offset_error(bits;linear=[(1,NaN)],offset="unsupported")=="ArgumentError: nonfinite coefficient"
+    @test offset_error(bits;linear=[(0,NaN)],offset=Inf)=="ArgumentError: linear index out of bounds"
+    @test offset_error([bits;bits];offset="unsupported")=="ArgumentError: duplicate bit identity"
+    @test offset_error(bits;linear=[(1,1e308),(1,1e308)],offset=2)=="ArgumentError: coefficient overflow"
+    @test offset_error(bits;linear=[(1,1e308),(1,1e308)],offset=Inf)=="ArgumentError: nonfinite coefficient"
+end
+
 @testitem "Canonical remaps preserve arbitrary input order and codebook validation" tags=[:q1] begin
     function remap_book(variable,bits)
         n=length(bits)

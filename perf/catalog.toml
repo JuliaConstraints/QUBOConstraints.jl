@@ -334,6 +334,77 @@ source = "scenarios.jl"
 
 [[scenarios]]
 collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_offset_case"
+id = "construct_offset_exact_empty_integer"
+implementation = "validated-offset-conversion-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 0
+    coefficient_type = "exact"
+    offset_kind = "integer"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_offset_case"
+id = "construct_offset_exact_tiny_float"
+implementation = "validated-offset-conversion-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 2
+    coefficient_type = "exact"
+    offset_kind = "integral_float"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_offset_case"
+id = "construct_offset_rational_empty_float"
+implementation = "validated-offset-conversion-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 0
+    coefficient_type = "rational"
+    offset_kind = "integral_float"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_offset_case"
+id = "construct_offset_rational_tiny_float"
+implementation = "validated-offset-conversion-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 2
+    coefficient_type = "rational"
+    offset_kind = "integral_float"
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
+factory = "component_offset_case"
+id = "construct_offset_rational_empty_typed"
+implementation = "validated-offset-conversion-v1"
+repeatable = true
+requirements = ["QUBOConstraints"]
+source = "scenarios.jl"
+
+    [scenarios.parameters]
+    bits = 0
+    coefficient_type = "rational"
+    offset_kind = "already_typed"
+
+
+[[scenarios]]
+collectors = ["benchmark", "chairmark", "profile", "profile_alloc"]
 factory = "exact_energy_case"
 id = "exact_energy_int_128"
 implementation = "owned-compact-bigint-energy-v1"

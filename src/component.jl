@@ -49,7 +49,9 @@ struct QUBOComponent{T<:Real}
             a, b = minmax(remap[i], remap[j])
             push!(ri, a); push!(cj, b); push!(vv, T(v))
         end
-        all(isfinite, vv) && isfinite(T(offset)) || throw(ArgumentError("nonfinite coefficient"))
+        all(isfinite, vv) || throw(ArgumentError("nonfinite coefficient"))
+        converted_offset = T(offset)
+        isfinite(converted_offset) || throw(ArgumentError("nonfinite coefficient"))
         perm = sortperm(eachindex(vv); by = k -> (cj[k], ri[k], vv[k]))
         # Sparse assembly reads the sorted coordinates without retaining them;
         # views avoid three copied permutation buffers while preserving order.
@@ -121,7 +123,7 @@ struct QUBOComponent{T<:Real}
             for b in ordered if b.role !== :primary)
         all(b -> b in keys(meanings), keys(auxiliary_meanings)) ||
             throw(ArgumentError("meaning assigned to an absent or primary bit"))
-        return new{T}(ordered, SparseVector(n, li, lv), matrix, T(offset),
+        return new{T}(ordered, SparseVector(n, li, lv), matrix, converted_offset,
             books, meanings, String(applicability), String(provenance))
     end
 end
