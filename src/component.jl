@@ -67,7 +67,19 @@ struct QUBOComponent{T<:Real}
         # Remove its diagonal in place instead of rebuilding off-diagonal terms.
         SparseArrays.fkeep!((i, j, _) -> i != j, matrix)
         books = AbstractCodebook[deepcopy(b) for b in codebooks]
-        allunique(b.variable for b in books) || throw(ArgumentError("duplicate codebook variable"))
+        # Iterate larger owned book lists directly, retaining the original
+        # key equality and support for heterogeneous variable key types.
+if length(books) < 64
+            allunique(b.variable for b in books) ||
+                throw(ArgumentError("duplicate codebook variable"))
+        else
+            seen_variables = Set{Any}()
+            sizehint!(seen_variables, length(books))
+            for book in books
+                in!(book.variable, seen_variables) &&
+                    throw(ArgumentError("duplicate codebook variable"))
+            end
+        end
         covered = BitID[]
         for book in books
             _append_codebook_bits!(covered, book)

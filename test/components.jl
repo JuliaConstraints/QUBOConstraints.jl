@@ -560,3 +560,88 @@ end
         end
     end
 end
+
+@testitem "Direct codebook variable checks preserve heterogeneous key semantics" tags=[:q1] begin
+    struct VariableKeyFixture{V} <: AbstractCodebook
+        variable::V
+        bits::Vector{BitID}
+        values::Vector{Int}
+    end
+    for kind in (:symbol,:integer,:string,:mixed), n in (0,1,16,63,64,65,128,1024)
+        key(i)=kind===:symbol ? Symbol(:key,i) : kind===:integer ? i :
+            kind===:string ? "key_"*string(i) : isodd(i) ? Float64(i) : i
+        books=AbstractCodebook[VariableKeyFixture(key(i),[BitID(:variable_key,i)],[-1,1]) for i in 1:n]
+        bits=reverse([BitID(:variable_key,i) for i in 1:n])
+        snapshot=copy(bits)
+        keys=[book.variable for book in books]
+        @test length(Set(keys))==n
+        linear=[(i,Float64(mod(i,5)-2)) for i in 1:n]
+        q=QUBOComponent{Float64}(bits;linear,codebooks=books)
+        @test q.bits==reverse(bits) && q.bits!==bits && bits==snapshot &&
+            all(zip(q.codebooks,books)) do (owned,input)
+                isequal(owned.variable,input.variable) &&
+                    owned.bits==input.bits && owned.bits!==input.bits &&
+                    owned.values==input.values && owned.values!==input.values
+            end
+        positions=Dict(bit=>i for (i,bit) in enumerate(bits))
+        for pattern in (i->false,i->true,isodd,i->mod(i,3)==0)
+            assignment=[pattern(i) for i in 1:n]
+            ordered=[assignment[positions[bit]] for bit in q.bits]
+            @test energy(q,ordered)==sum(v*assignment[i] for (i,v) in linear;init=0.0)
+        end
+        if n>0
+            owned_values=copy(q.codebooks[1].values)
+            books[1].values[1]=99
+            @test q.codebooks[1].values==owned_values &&
+                isequal([book.variable for book in books],keys)
+        end
+        n>=2 || continue
+        invalid=copy(books)
+        invalid[end]=VariableKeyFixture(first(keys),copy(books[end].bits),[-1,1])
+        input_bits=deepcopy([book.bits for book in invalid])
+        error=try
+            QUBOComponent{Float64}(bits;codebooks=invalid)
+            nothing
+        catch exception
+            exception
+        end
+        @test error isa ArgumentError
+        @test sprint(showerror,error)=="ArgumentError: duplicate codebook variable"
+        @test bits==snapshot && [book.bits for book in invalid]==input_bits
+    end
+    for (first_key,second_key,duplicate) in
+            ((1,1.0,true),(big(1),1//1,true),(NaN,NaN,true),
+             (-0.0,0.0,false),(:x,"x",false))
+        keys=Any[first_key,second_key,collect(3:64)...]
+        books=AbstractCodebook[VariableKeyFixture(key,[BitID(:special_key,i)],[-1,1])
+            for (i,key) in enumerate(keys)]
+        bits=[BitID(:special_key,i) for i in eachindex(keys)]
+        @test (length(Set(keys))<length(keys))==duplicate
+        result=try
+            QUBOComponent{Float64}(bits;codebooks=books)
+        catch exception
+            exception
+        end
+        if duplicate
+            @test result isa ArgumentError
+            @test sprint(showerror,result)=="ArgumentError: duplicate codebook variable"
+        else
+            @test length(result.codebooks)==length(books)
+            @test isequal([book.variable for book in result.codebooks],keys)
+        end
+    end
+    # Duplicate variables retain priority even when coverage is also invalid.
+    for missing in (false,true)
+        books=AbstractCodebook[VariableKeyFixture(Symbol(:priority,i),[BitID(:priority,i)],[-1,1]) for i in 1:64]
+        books[end]=VariableKeyFixture(:priority1,[missing ? BitID(:absent_priority,1) : BitID(:priority,1)],[-1,1])
+        bits=[BitID(:priority,i) for i in 1:64]
+        error=try
+            QUBOComponent{Float64}(bits;codebooks=books)
+            nothing
+        catch exception
+            exception
+        end
+        @test error isa ArgumentError
+        @test sprint(showerror,error)=="ArgumentError: duplicate codebook variable"
+    end
+end
